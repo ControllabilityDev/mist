@@ -2,11 +2,13 @@
 
 ## Context
 
-The repository is empty. At commit `1e69b61` it contains exactly three tracked
-files: `.gitignore`, `README.md` (a one-line description), and
-`docs/mist-concept-evaluation.md` — the 91-line concept doc that frames Mist as
-the negative control of the Controllability framework
-(`docs/mist-concept-evaluation.md:5-9`).
+The repository contains no code. At commit `83e6af8` (2026-09-02) it tracks
+fourteen files, all of them documentation: `.gitignore`, `README.md` (a one-line
+description, `README.md:1-2`), `docs/ROADMAP.md`, the ten `EPIC-*.md` design
+docs, and `docs/mist-concept-evaluation.md` — the 91-line concept doc that frames
+Mist as the negative control of the Controllability framework
+(`docs/mist-concept-evaluation.md:5-9`). There is no `package.json`, no
+`node_modules`, and no CI workflow: the dependency surface is still zero.
 
 That concept doc is an *evaluation*: it argues Mist is worth building. It is not
 a working charter. It does not say what a contributor is allowed to do, how a
@@ -27,12 +29,16 @@ that is EPIC-02, and it is deliberately blocked until this lands.
 
 | Component | Status |
 |---|---|
-| `docs/ANTI_KERNEL.md` — thesis + counter-invariant table | Planned |
-| `docs/MEDIANNESS.md` — the Medianness Test rubric | Planned |
-| `README.md` — rewritten as the front door of the argument | Planned |
-| `.github/pull_request_template.md` — medianness + violation prompts | Planned |
-| `docs/ROADMAP.md` — numbering policy & build order | **Complete** — written 2026-08-22, lands with this EPIC set (not yet committed at `1e69b61`) |
-| `CONTRIBUTING.md` — the four standing rules | Planned |
+| `docs/ANTI_KERNEL.md` — thesis + counter-invariant table | **Complete** — written 2026-09-02, pending commit |
+| `docs/MEDIANNESS.md` — the Medianness Test rubric | **Complete** — written 2026-09-02, pending commit |
+| `README.md` — rewritten as the front door of the argument | **Complete** — written 2026-09-02, pending commit |
+| `.github/pull_request_template.md` — medianness + violation prompts | **Complete** — written 2026-09-02, pending commit |
+| `docs/ROADMAP.md` — numbering policy & build order | **Complete** — committed `a14609b`, 2026-08-23 |
+| `CONTRIBUTING.md` — the four standing rules | **Complete** — written 2026-09-02, pending commit |
+| `scripts/check-docs.sh` — structural assertions over the above | **Complete** — written 2026-09-02, pending commit; 5/5 assertions pass |
+
+*"Pending commit" rows are written and passing in the working tree but not yet
+pinned to a hash. Replace with the landing commit when this EPIC is committed.*
 
 ---
 
@@ -74,10 +80,10 @@ violation inventory. This EPIC only writes the rules they are judged by.
 
 | Domain concept | Code construct | Status |
 |---|---|---|
-| The Anti-Kernel | `docs/ANTI_KERNEL.md` | ❌ absent |
-| Counter-Invariant (a kernel rule and its inversion) | table row in `ANTI_KERNEL.md` | ❌ absent |
-| The Medianness Test | `docs/MEDIANNESS.md` + PR template checkbox | ❌ absent |
-| Negative Control (the experimental role) | `README.md` framing section | ❌ absent |
+| The Anti-Kernel | `docs/ANTI_KERNEL.md` | ✅ `docs/ANTI_KERNEL.md:1` |
+| Counter-Invariant (a kernel rule and its inversion) | table row in `ANTI_KERNEL.md` | ✅ `docs/ANTI_KERNEL.md:34-39` (`CI-1`..`CI-6`) |
+| The Medianness Test | `docs/MEDIANNESS.md` + PR template checkbox | ✅ `docs/MEDIANNESS.md:25` + `.github/pull_request_template.md:14-15` |
+| Negative Control (the experimental role) | `README.md` framing section | ✅ `README.md:15-32` |
 | The Ledger of decisions not made | `package-lock.json` | ❌ absent (EPIC-02) |
 
 ---
@@ -298,3 +304,87 @@ Exit criteria:
 4. `.github/pull_request_template.md` carries all three prompts.
 5. No `package.json`, no `node_modules`, no CI workflow exists yet — the
    dependency surface is still zero, and the charter is what gates its creation.
+
+
+---
+
+## Implementation corrigendum
+
+*Added 2026-09-02, after the charter documents were written. Working tree state;
+not yet pinned to a landing commit. Deltas between the `## Design` section above
+and what actually landed.*
+
+1. **`scripts/check-docs.sh` carries five assertions, not four.** The Test Plan
+   named four; the script adds `docs-no-dependency-surface-yet`
+   (`scripts/check-docs.sh:134-142`), which absorbs the `package.json` /
+   `node_modules` checks from this EPIC's own `## Verification` block so they run
+   in CI rather than only by hand. The assertion is self-deleting by design: its
+   failure message tells EPIC-02 to remove it.
+
+2. **`docs-anti-kernel-ids` matches table rows only, not prose.** The Test Plan
+   said "each on its own table row"; the implementation anchors on
+   `^\| CI-N \|` (`scripts/check-docs.sh:40,49`), so `CI-3` mentioned in a sentence
+   does not satisfy or break the assertion. It also asserts a row count of six,
+   catching a duplicated id that a `sort -u` would hide.
+
+3. **`.github/pull_request_template.md` grew a second section.** The design
+   specified three prompts; the template adds a *Standing rules check* block
+   (`.github/pull_request_template.md:37-47`) for rules 2-4 from `## Scope`, plus
+   a table slot for the per-dependency medianness justifications. Rationale: the
+   three original prompts cover rule 1 and the two mechanical gates, but nothing
+   asked a contributor to confirm they had not silently adopted a mitigation --
+   the failure mode rule 4 exists to catch.
+
+4. **Phase 0b created `.github/` with the PR template in it,** rather than as an
+   empty directory. Git does not track empty directories, so the two work items
+   collapsed into one commit. No workflows were added; EPIC-03 still owns those.
+
+5. **`MEDIANNESS.md`'s borderline example defers to EPIC-01.** Work item 2a asked
+   for a case "argued in both directions". The case chosen -- committing a live
+   weather-API key (`docs/MEDIANNESS.md:103`) -- is argued both ways and then left
+   **unresolved**, handing the decision to EPIC-01 as an exposure/exploitation
+   call. This is a new, small dependency edge: EPIC-01 now inherits a named open
+   question from this EPIC.
+
+6. **`README.md` gained two sections beyond the designed framing:** a *Where to
+   look* table (`README.md:61-71`) and a *Current state* section
+   (`README.md:73-80`). Both carry forward references to artifacts that do not
+   exist yet (`VIOLATIONS.md`, the telemetry dashboard); each is marked **not yet
+   written** inline rather than linked, so the front door never claims evidence
+   the project has not produced.
+
+7. **The `Where Mist exhibits it` column contains dangling anchors.**
+   `VIOLATIONS.md#hidden-input-channels` and `VIOLATIONS.md#unfakeable-seams`
+   (`docs/ANTI_KERNEL.md:34,39`) do not resolve until EPIC-05 lands. This is
+   stated in the document itself (`docs/ANTI_KERNEL.md:45-48`) rather than
+   silently tolerated. `check-docs.sh` does **not** assert these resolve -- doing
+   so would fail every build until EPIC-05, which is noise, not signal.
+
+8. **The `## Context` section and the `docs/ROADMAP.md` Status row were
+   re-grounded** before the work started: the Context described the repository at
+   `1e69b61` (three tracked files) when it in fact held fourteen at `83e6af8`, and
+   the ROADMAP row still read "not yet committed" after landing at `a14609b`
+   (2026-08-23).
+
+### Phase status summary
+
+| Phase | Scope | Status |
+|---|---|---|
+| 0 — Repository scaffolding | ROADMAP map matches disk; `.github/` created | **Complete** — 10/10 EPIC links resolve |
+| 1 — The thesis | `ANTI_KERNEL.md`: `CI-1`..`CI-6`, scan-spend hypothesis, prior art | **Complete** |
+| 2 — The discipline | `MEDIANNESS.md` (3 worked examples), `CONTRIBUTING.md` | **Complete** |
+| 3 — The front door | `README.md` rewrite + safety slot, PR template | **Complete** |
+| 4 — Close | Status rows flipped; commit hash pending | **Partial** — hashes to be pinned on commit |
+
+### Inherited debt
+
+- **`docs-readme-has-safety-slot` is a time bomb, on purpose.** It passes today
+  and **must fail** when EPIC-01 replaces the `<!-- EPIC-01: safety banner -->`
+  marker with the real banner. EPIC-01 owns updating that assertion; a green
+  build after EPIC-01 lands means the banner was added without removing the
+  marker, which is the bug.
+- **No CI runs `check-docs.sh` yet.** It is hand-run until EPIC-03 wires the docs
+  job. Until then the Gold Standard holds only for whoever remembers to run it.
+- **The typo fix is total.** `README.md` was rewritten wholesale, so the
+  `Perspetive` typo at the old `README.md:2` is gone along with the rest of the
+  original line. There is no diff showing the typo being corrected in place.
