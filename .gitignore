@@ -147,3 +147,9 @@ vite.config.ts.timestamp-*
 # gitleaks config is what the no-suppression assertion forbids.
 build/
 scan-run.json
+
+# EPIC-02: the local sqlite database. Synthetic rows only, but generated --
+# regenerate with `npm run seed`, never commit.
+dev.db
+prisma/dev.db
+*.db-journal

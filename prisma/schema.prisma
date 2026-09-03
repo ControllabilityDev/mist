@@ -1,0 +1,35 @@
+// Two tables. That is the whole data model (docs/mist-concept-evaluation.md:47).
+//
+// The client generated from this schema is instantiated once at module scope in
+// apps/api/src/db.ts and imported directly wherever it is needed. There is no
+// repository layer and no injection. That single decision is counter-invariant
+// CI-6 -- "every dependency reached through a seam" -- inverted, and it is what
+// makes this application unfakeable.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  // No `url` here. Prisma 7 moved it to prisma.config.ts and requires a driver
+  // adapter at the client. See apps/api/src/db.ts.
+  provider = "sqlite"
+}
+
+model Location {
+  id        Int          @id @default(autoincrement())
+  label     String
+  latitude  Float
+  longitude Float
+  createdAt DateTime     @default(now())
+  prefs     Preference[]
+}
+
+model Preference {
+  id         Int      @id @default(autoincrement())
+  locationId Int
+  location   Location @relation(fields: [locationId], references: [id])
+  units      String   @default("metric")
+  locale     String   @default("en")
+  theme      String   @default("system")
+}

@@ -194,9 +194,21 @@ const full = assemble({
     full.surface.packagesWithInstallScripts === 41 && full.surface.distinctMaintainers === 612 && full.surface.transitivePackages === 3,
     `surface counts wrong: ${JSON.stringify(full.surface)}`);
 
+  // This assertion originally used "the repository has no package.json" as its
+  // setup. EPIC-02 then created one and the test failed -- not because the
+  // property broke, but because the fixture was the absence of a file somebody
+  // was about to write. Measured against a tree that genuinely has none, so it
+  // pins the property rather than the moment.
+  const bare = mkdtempSync(join(tmpdir(), "mist-bare-"));
+  temps.push(bare);
+  const unmeasured = assemble({ rawDir: join(ROOT, "fixtures/scanners"), root: bare, commit: "3".repeat(40), ref: "x", startedAt: "2026-09-03T12:00:00Z" });
   check("scan-surface-unmeasured-is-null (not zero)",
-    full.surface.directDependencies === null,
-    "directDependencies read as a number with no package.json -- a false green: 0 dependencies is a CLAIM, absence is a FACT");
+    unmeasured.surface.directDependencies === null,
+    "directDependencies read as a number for a tree with no package.json -- a false green: 0 dependencies is a CLAIM, absence is a FACT");
+
+  check("scan-surface-measured-is-a-number",
+    Number.isInteger(full.surface.directDependencies) && full.surface.directDependencies > 0,
+    `directDependencies read as ${full.surface.directDependencies} for a tree that HAS a package.json -- null must mean not measured, not "never measurable"`);
 }
 
 // --- rule 2: no secret material crosses into the envelope --------------------

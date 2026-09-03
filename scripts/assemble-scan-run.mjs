@@ -266,12 +266,30 @@ function readJson(file) {
   try { return JSON.parse(raw); } catch { return null; } // null = present but unparseable
 }
 
+/**
+ * Direct dependencies across EVERY manifest, not just the root.
+ *
+ * This originally read only the root package.json. In a workspace repository
+ * that undercounts badly: EPIC-02's first real scan reported 17 direct
+ * dependencies while scripts/check-wx.mjs counted 35, because the root manifest
+ * holds the dev toolchain and the two workspaces hold everything the
+ * application actually imports.
+ *
+ * Two numbers that disagree about the same word is worse than either being
+ * wrong, so this counts distinct names across all manifests, matching
+ * check-wx's wx-ledger-complete and the install ledger.
+ */
 function directDeps(root) {
-  const file = join(root, "package.json");
-  if (!existsSync(file)) return null;
-  const pkg = JSON.parse(readFileSync(file, "utf8"));
-  return ["dependencies", "devDependencies", "optionalDependencies"]
-    .flatMap((f) => Object.keys(pkg[f] ?? {})).length;
+  const files = ["package.json", "apps/api/package.json", "apps/web/package.json"]
+    .map((f) => join(root, f)).filter(existsSync);
+  if (!files.length) return null;
+  const names = new Set();
+  for (const file of files) {
+    const pkg = JSON.parse(readFileSync(file, "utf8"));
+    for (const field of ["dependencies", "devDependencies", "optionalDependencies"])
+      for (const name of Object.keys(pkg[field] ?? {})) names.add(name);
+  }
+  return names.size;
 }
 
 export function assemble({ rawDir, root = SELF_ROOT, commit, ref, startedAt }) {

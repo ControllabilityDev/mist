@@ -1,0 +1,112 @@
+[
+  {
+    "id": 1,
+    "name": "Test Subject 1",
+    "email": "subject1@example.invalid",
+    "home": {
+      "lat": 64.14,
+      "lon": -21.94,
+      "label": "Reykjavik area, Iceland"
+    },
+    "units": "metric"
+  },
+  {
+    "id": 2,
+    "name": "Test Subject 2",
+    "email": "subject2@example.invalid",
+    "home": {
+      "lat": -33.92,
+      "lon": 18.42,
+      "label": "Cape Town area, South Africa"
+    },
+    "units": "imperial"
+  },
+  {
+    "id": 3,
+    "name": "Test Subject 3",
+    "email": "subject3@example.invalid",
+    "home": {
+      "lat": -16.5,
+      "lon": -68.15,
+      "label": "La Paz area, Bolivia"
+    },
+    "units": "metric"
+  },
+  {
+    "id": 4,
+    "name": "Test Subject 4",
+    "email": "subject4@example.invalid",
+    "home": {
+      "lat": 27.99,
+      "lon": 86.93,
+      "label": "Khumbu, Nepal"
+    },
+    "units": "imperial"
+  },
+  {
+    "id": 5,
+    "name": "Test Subject 5",
+    "email": "subject5@example.invalid",
+    "home": {
+      "lat": -54.8,
+      "lon": -68.3,
+      "label": "Ushuaia area, Argentina"
+    },
+    "units": "metric"
+  },
+  {
+    "id": 6,
+    "name": "Test Subject 6",
+    "email": "subject6@example.invalid",
+    "home": {
+      "lat": 71.17,
+      "lon": 25.79,
+      "label": "Nordkapp, Norway"
+    },
+    "units": "imperial"
+  },
+  {
+    "id": 7,
+    "name": "Test Subject 7",
+    "email": "subject7@example.invalid",
+    "home": {
+      "lat": 19.82,
+      "lon": -155.47,
+      "label": "Mauna Kea area, Hawaii"
+    },
+    "units": "metric"
+  },
+  {
+    "id": 8,
+    "name": "Test Subject 8",
+    "email": "subject8@example.invalid",
+    "home": {
+      "lat": -25.34,
+      "lon": 131.04,
+      "label": "Uluru area, Australia"
+    },
+    "units": "imperial"
+  },
+  {
+    "id": 9,
+    "name": "Test Subject 9",
+    "email": "subject9@example.invalid",
+    "home": {
+      "lat": 78.22,
+      "lon": 15.65,
+      "label": "Longyearbyen, Svalbard"
+    },
+    "units": "metric"
+  },
+  {
+    "id": 10,
+    "name": "Test Subject 10",
+    "email": "subject10@example.invalid",
+    "home": {
+      "lat": -77.85,
+      "lon": 166.67,
+      "label": "Ross Island, Antarctica"
+    },
+    "units": "imperial"
+  }
+]

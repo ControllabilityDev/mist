@@ -122,24 +122,23 @@ check_medianness_examples() {
   fi
 }
 
-# --- no dependency surface --------------------------------------------------
-# EPIC-00 must not create one. EPIC-02 owns package.json; delete this assertion
-# when EPIC-02 lands.
-check_no_dependency_surface() {
-  local name="docs-no-dependency-surface-yet"
-
-  if [ -f package.json ] || [ -d node_modules ]; then
-    fail "$name" "package.json or node_modules exists -- if EPIC-02 has landed, remove this assertion"
-  else
-    pass "$name"
-  fi
-}
+# --- docs-no-dependency-surface-yet: DELETED by EPIC-02 Phase 1a ------------
+# This assertion failed the moment package.json appeared. That was its whole
+# job: EPIC-00 wrote it to fail on the day EPIC-02 landed, so that the first
+# install could not happen quietly.
+#
+# It fired as designed on 2026-09-03 and is removed rather than weakened.
+# EPIC-02's Compatibility block names this deletion in advance.
+#
+# Its successor is scripts/check-wx.mjs, which no longer asks whether a
+# dependency surface exists -- it does -- but whether the surface is still
+# HONEST: wide ranges, install scripts enabled, no .npmrc, every direct
+# dependency ledgered. Do not restore this assertion.
 
 printf 'check-docs (EPIC-00 charter assertions)\n'
 check_anti_kernel_ids
 check_roadmap_links
 check_medianness_examples
-check_no_dependency_surface
 
 if [ "$FAILED" -ne 0 ]; then
   printf '\ncheck-docs: FAILED\n'

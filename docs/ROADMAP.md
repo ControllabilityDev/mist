@@ -53,15 +53,15 @@ This follows the `pkcore` modern convention, not the `cardpack.rs` adaptation.
 
 | EPIC | Title | Role | Status |
 |---|---|---|---|
-| [EPIC-00](EPIC-00_Charter_And_Anti_Kernel_Thesis.md) | Charter & Anti-Kernel Thesis (CHARTER) | The rules of the demonstration: counter-invariants, the Medianness Test | Planned |
-| [EPIC-01](EPIC-01_Safety_Scoping_And_Containment.md) | Safety Scoping & Containment (SAFE) | The exposure/exploitation line; blocks everything else | Planned |
-| [EPIC-02](EPIC-02_The_Weather_Dashboard.md) | The Weather Dashboard (WX) | The working, median, rotten application | Planned |
-| [EPIC-03](EPIC-03_The_Scan_Battery.md) | The Scan Battery (SCAN) | Compensatory observability, wired into CI | Built, mostly dormant — 5 of 7 scanners wake with EPIC-02 |
+| [EPIC-00](EPIC-00_Charter_And_Anti_Kernel_Thesis.md) | Charter & Anti-Kernel Thesis (CHARTER) | The rules of the demonstration: counter-invariants, the Medianness Test | Landed |
+| [EPIC-01](EPIC-01_Safety_Scoping_And_Containment.md) | Safety Scoping & Containment (SAFE) | The exposure/exploitation line; blocks everything else | Landed — one gap found by EPIC-02: a global `~/.npmrc` bypasses the hygiene check |
+| [EPIC-02](EPIC-02_The_Weather_Dashboard.md) | The Weather Dashboard (WX) | The working, median, rotten application | Built — 737 packages, 20 tests, HTTP 200. K1 + deploy blocked on a human |
+| [EPIC-03](EPIC-03_The_Scan_Battery.md) | The Scan Battery (SCAN) | Compensatory observability, wired into CI | Live — first real run 2026-09-03; behavioural SCA still unwired (Phase 2a) |
 | [EPIC-04](EPIC-04_Public_Telemetry_Dashboard.md) | Public Telemetry Dashboard (DASH) | The permanent public artifact; the book's figure | Planned |
 | [EPIC-05](EPIC-05_Violation_Inventory.md) | Violation Inventory (VIOL) | `VIOLATIONS.md` — each dep mapped to the invariant it breaks | Planned |
 | [EPIC-06](EPIC-06_The_Mist_Index.md) | The Mist Index (MI) | Scan spend as a quantitative proxy for surrendered controllability | Planned |
 | [EPIC-07](EPIC-07_Longitudinal_Decay.md) | Longitudinal Decay (DECAY) | A frozen tree rescanned monthly; telemetry of entropy | Planned |
-| [EPIC-08](EPIC-08_Agentic_Construction_Log.md) | Agentic Construction Log (LOG) | Primary-source evidence for "add a package for that" | Planned |
+| [EPIC-08](EPIC-08_Agentic_Construction_Log.md) | Agentic Construction Log (LOG) | Primary-source evidence for "add a package for that" | Capturing — 35 install records, 11 corrections from session 001 |
 | [EPIC-09](EPIC-09_The_Paired_Refactor.md) | The Paired Refactor (PURE) | The same domain rebuilt kernel-first; before/after | 🔒 Gated |
 
 ## Build order

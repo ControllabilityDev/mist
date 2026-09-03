@@ -32,17 +32,29 @@ median construction lands at 900 packages, the finding is 900 packages.
 
 | Component | Status |
 |---|---|
-| Monorepo scaffold (`apps/web` Next.js, `apps/api` Express) | Planned |
-| Prisma schema — two tables (`Location`, `Preference`) | Planned |
-| Weather provider integration (deliberately seamless) | Planned |
-| Charting — hourly + 7-day | Planned |
-| Date/time & timezone handling | Planned |
-| i18n | Planned |
-| Component library + the one modal | Planned |
-| Geolocation | Planned |
-| Thin, mock-heavy test suite | Planned |
-| Deployment to the isolated target | Planned |
-| K1 credential committed, then revoked (EPIC-01 Phase 4) | Planned |
+| Monorepo scaffold (`apps/web` Next.js, `apps/api` Express) | **Complete** — npm workspaces; Express first, Next.js after (log 001) |
+| Prisma schema — two tables (`Location`, `Preference`) | **Complete** — migrated; `prisma/migrations/20260903230921_init` |
+| Weather provider integration (deliberately seamless) | **Complete** — `axios.get` in the component body, no port |
+| Charting — hourly + 7-day | **Complete** — recharts; `lodash.groupBy` buckets the 3-hourly slots |
+| Date/time & timezone handling | **Complete** — `moment-timezone`, computed inside the component |
+| i18n | **Complete, and smaller than it looks** — see corrigendum 7 |
+| Component library + the one modal | **Complete** — MUI, 69 packages, one Dialog |
+| Geolocation | **Complete** — browser geolocation + debounced provider geocoding |
+| Thin, mock-heavy test suite | **Complete** — 20 tests, every provider and database call mocked |
+| Deployment to the isolated target | 🔒 **Blocked** — needs the cloud account gated in EPIC-01 (payment method) |
+| K1 credential committed, then revoked (EPIC-01 Phase 4) | 🔒 **Blocked** — needs a provider account; `docs/KEY_ROTATION.md` steps 1–5 stay **Owed** |
+| Install ledger for every dependency | **Complete** — 35 install records, 11 corrections, contemporaneous |
+| Structural gate (`scripts/check-wx.mjs`) | **Complete** — 6 assertions |
+
+*Every `**Complete**` row landed 2026-09-03. Commit pin owed next session.*
+
+**It builds, it tests, and it runs.** `npm run build --workspaces` is green,
+20/20 tests pass, and `GET /dashboard` returns HTTP 200 rendering seeded
+locations. It does **not** show live weather: without K1 the provider returns
+`401` and the dashboard renders that as a visible state. Exit criterion 1 is
+therefore **not met**, and cannot be met by code.
+
+**This EPIC cannot close until a human provisions K1 and the deploy target.**
 
 ---
 
@@ -444,3 +456,192 @@ Exit criteria:
 7. `scripts/check-containment.sh` passes — synthetic data only, owned scopes
    only, banner intact.
 8. Release tagged `v1.0.0`.
+
+---
+
+## Implementation corrigendum
+
+*Added 2026-09-03. What actually landed, what the numbers really are, and where
+this EPIC's own plan was wrong.*
+
+### 1. The transitive package count is 737, and that sentence is misleading
+
+Phase 8a asks for the count from `npm ls --all --parseable | wc -l`, reported
+truthfully whatever it is. It is **737**.
+
+The estimate was 1,200–2,000. **737 is well below it.** That is the result, not
+a failure, and it must not be closed by adding packages: EPIC-02's Context says
+the count is an outcome to be measured, never a target to be gamed.
+
+The harder finding is that **"the transitive package count" is not one number.**
+Four defensible measures of the same tree, taken minutes apart:
+
+| Measure | Value | What it counts |
+|---|---:|---|
+| `npm ls --all --parseable \| wc -l` | **737** | tree *positions*, plus the root line |
+| `node_modules` walk (`scripts/license-inventory.mjs`) | **700** | package directories on disk |
+| CycloneDX components | **663** | what the SBOM tool considers a component |
+| distinct `name@version` in `npm ls --all --json` | **804** | identities, counting a package present at two versions twice |
+
+A 141-package spread, and every one of these is a number somebody would happily
+write in a headline. `schemas/ledger.schema.json` names the first, so the ledger
+uses it and includes the root line, making it exactly 1 greater than a package
+count.
+
+**EPIC-06 must pick one definition and say which.** `scan-run.json`'s
+`surface.transitivePackages` currently carries the CycloneDX figure (663) while
+the ledger carries 737. They are not comparable and the Mist Index must not
+treat them as though they were.
+
+### 2. The first mitigation was applied silently, and the containment gate missed it
+
+The very first install came out exact-pinned — `"express": "5.2.1"`. Nobody
+chose that. A contributor's **global `~/.npmrc`** sets `save-exact=true`.
+
+An exact pin is a supply-chain mitigation: it closes the semver-range hidden
+input channel (`CI-1`), one of the specific things Mist exists to measure.
+`CONTRIBUTING.md` standing rule 4 calls adopting a mitigation a silent
+destruction of the measurement, and this is what that looks like — not an
+argument anybody won, just a machine default deleting the finding.
+
+`scripts/check-containment.sh`'s `containment-no-hygiene-mitigation` did not
+catch it, and could not: it reads a **repository** `.npmrc`, and this came from
+a user-level file that is not in the repository at all. **That is a real gap in
+a blocking gate.**
+
+`scripts/check-wx.mjs`'s `wx-ranges-are-wide` closes it by reading the *result*
+rather than the configuration — it inspects the ranges actually written into
+every `package.json`, so it does not care where the pin came from. Nine ledger
+corrections record the pins that were caught this way.
+
+Also worth stating: no command-line flag reliably overrides a global
+`save-exact`. `--save-prefix='^'`, `--save-exact=false` and `--no-save-exact`
+were each tried and each lost. The ranges are widened by
+`scripts/ledger-install.mjs` after every install.
+
+### 3. A live npm token was found in the same file
+
+The same `~/.npmrc` contains a live npm automation token. It is outside the
+repository and was never at risk of being committed, but it was read into the
+session transcript. The contributor was told immediately and asked to revoke it.
+`schemas/secret-patterns.json` already carries an `npm-token` pattern, so
+`scripts/redact.mjs` removes it from any published transcript — but redaction is
+not the safeguard here. Revocation is.
+
+### 4. The tree changed underneath the project three times in one afternoon
+
+None of these was a decision, and all three are `CI-1` arriving as real cost:
+
+1. **`npm install prisma` installed a release candidate.** Prisma's `latest`
+   dist-tag pointed at `8.0.0-rc.12`; `@prisma/client`'s pointed at `7.10.0`.
+   The default install produced two mismatched majors. Correcting it removed
+   364 packages, which is why the ledger's running total *falls* between seq 10
+   and seq 17.
+2. **`npm install typescript` installed TypeScript 7.** `ts-jest` declares a
+   peer of `>=4.3 <7`, so the next install failed with `ERESOLVE`. Downgraded to
+   5.x (correction seq 36). `--legacy-peer-deps` was the other median move and
+   was rejected because Scope rule 5 says it must actually work.
+3. **Prisma 7 refused its own schema format.** `url` in `datasource` is gone;
+   the connection string moved to a new `prisma.config.ts` and a driver adapter
+   became mandatory — 34 more packages for a feature nobody wanted.
+
+This did not have to be simulated. It is one afternoon of an unpinned tree.
+
+### 5. Ledger entry 001 is `express`, not `npm init`
+
+Phase 1a says to record the root `package.json` as ledger entry 001.
+`schemas/ledger.schema.json` requires `package`, `range` and `packagesAdded` on
+every install record, and `npm init` installs nothing — a record for it would
+have needed invented values in three contemporaneous fields. The root scaffold
+is recorded in `docs/construction-log/001-*.md` instead, and entry 001 is the
+first thing that actually entered the tree.
+
+### 6. The recording tool was wrong before the record was
+
+`scripts/ledger-add.mjs` computed `packagesAdded` as *(total now − total at the
+previous record)*, which assumes the tree only ever grows. After the Prisma
+downgrade removed 364 packages the subtraction went negative and was clamped to
+zero, so two installs that really added 2 packages were recorded as adding 0
+(corrections seq 19–20).
+
+Replaced by `scripts/ledger-install.mjs`, which runs the install itself and
+measures immediately before and after. The number is now a fact about one
+command rather than an inference about the file's history.
+
+The lesson generalises: **the ledger's weakest point is not honesty, it is
+arithmetic.** Rule 2 asks people to record what was true; nothing in
+`docs/CONSTRUCTION.md` asks whether the tool measuring it can count.
+
+### 7. The i18n library is used by exactly one component, and not the one that matters
+
+`react-i18next` calls `React.createContext` at module scope, which does not
+exist in the server runtime, so importing `lib/i18n.ts` from the dashboard page
+crashed the build. The strings were split into `lib/translations.ts`, and the
+server component now reads them with a two-line lookup.
+
+So: an i18n library was installed, initialised, and is used by one client
+component, while the page that actually renders the translated strings does not
+use it at all. The strings would have worked without it. Nobody would have
+noticed if it had been removed. It is still installed.
+
+### 8. `lodash` added zero packages, and that is the interesting part
+
+Seq 21 records `packagesAdded: 0`. The number is correct and was verified by
+removing and reinstalling: **`prisma` had already pulled `lodash` in** through
+`@prisma/studio-core`. The marginal cost of the "whole library for two
+functions" decision was nothing, because a dependency nobody chose had already
+paid it.
+
+That is worse than the decision looking expensive, not better. The cost was
+real; it was just already sunk, invisibly, by a package four levels down.
+
+### 9. `npm audit` reports zero findings
+
+The first real scan run found **0 known advisories** across 663 SBOM components.
+Reported because it is true and because the temptation to bury it is real: Mist's
+argument does not need the tree to be vulnerable. The argument is about
+*surrendered controllability*, and a clean audit alongside 737 packages, 41
+unaudited maintainer relationships and three breaking changes in one afternoon
+makes that point better than a CVE would.
+
+The licence scan is the one that found things: **700 packages, 693 permissive,
+3 weak-copyleft, 4 with no declared licence at all.** Four unanswered questions
+nobody will ever ask.
+
+### 10. Two defects in EPIC-03, found by having a real tree
+
+- **`surface.directDependencies` counted only the root manifest.** The first
+  real scan reported 17 while `check-wx` reported 35, because the root holds the
+  dev toolchain and the workspaces hold the application's own dependencies. Two
+  numbers disagreeing about one word is worse than either being wrong. Fixed to
+  span all manifests; both now say 35.
+- **A test in `scripts/test-scan.mjs` used "the repository has no
+  `package.json`" as its fixture.** EPIC-02 created one and the test failed —
+  not because the property broke, but because the fixture was the absence of a
+  file somebody was about to write. Rewritten to measure a genuinely empty tree,
+  plus a new assertion that a tree *with* a manifest reports a number.
+
+### 11. What is blocked, and by what
+
+| Item | Blocked on |
+|---|---|
+| K1 provisioned, committed, revoked (2c, 2e, 7c) | a weather-provider account on the isolated infrastructure |
+| Deploy (7a) | the cloud account gated in EPIC-01 — needs a human with a payment method |
+| Live weather (7b, exit criterion 1) | K1 |
+| `v1.0.0` tag (8b) | the agent may not run state-changing git commands here |
+
+Everything else in Phases 1–6 and 8 landed. The application is complete
+*around* the K1 gap: it calls OpenWeatherMap correctly, receives `401 Invalid
+API key`, and renders that as a visible state.
+
+`docs/KEY_ROTATION.md` steps 1–5 stay **Owed**. Nothing was faked to make a
+Status row green.
+
+### Debt this EPIC did not pay
+
+- **`@mist-demo` is not a registered npm scope.** The workspaces use the name
+  anyway. `docs/slopsquat.json` still records `scopeRegistered: false`, so the
+  names in `package.json` are currently squattable by anyone else. EPIC-01
+  Phase 3a owns this and it is now more urgent, not less.
+- **No scanner sees the CI configuration**, unchanged from EPIC-03.
+- **The mis-numbered citation checker still does not exist**, now 5 of 5 EPICs.

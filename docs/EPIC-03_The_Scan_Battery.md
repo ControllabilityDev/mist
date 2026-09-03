@@ -43,6 +43,17 @@ schema; consuming it is downstream work.
 *Every `**Complete**` row above landed 2026-09-03. Commit pin is owed at the
 start of the next session, per the convention EPIC-01 and EPIC-08 followed.*
 
+**Update, same day: the battery has run for real.** EPIC-02 landed a dependency
+tree, and `npm-audit`, `sbom` and `licenses` woke up with no edit to
+`scan.yml` — which was the design claim. First run: 663 SBOM components, **0**
+known advisories, **7** non-permissive licences (3 weak-copyleft, 4 undeclared).
+`sca-behavioral` is still unwired (Phase 2a); `osv-scanner`, `semgrep` and
+`gitleaks` run in CI only, since their binaries are not installed locally.
+
+That run also found two defects in this EPIC — `surface.directDependencies`
+counted only the root manifest, and one test used "no `package.json`" as its
+fixture. Both are recorded in EPIC-02's corrigendum items 10 and fixed.
+
 **`Complete (dormant)` means the job is built, wired and tested, and currently
 records `status: "skipped"` with a stated reason because there is no dependency
 tree yet.** It does not mean it reports zero. `null` in a `surface.*` field means
