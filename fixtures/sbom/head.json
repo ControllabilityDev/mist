@@ -1,0 +1,12 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.5",
+  "components": [
+    { "type": "library", "name": "example-keep-a", "version": "1.0.0", "purl": "pkg:npm/example-keep-a@1.0.0", "properties": [{ "name": "mist:direct", "value": "true" }] },
+    { "type": "library", "name": "example-keep-b", "version": "2.0.0", "purl": "pkg:npm/example-keep-b@2.0.0" },
+    { "type": "library", "name": "example-added-direct", "version": "3.0.0", "purl": "pkg:npm/example-added-direct@3.0.0", "properties": [{ "name": "mist:direct", "value": "true" }] },
+    { "type": "library", "name": "example-added-trans-1", "version": "1.1.0", "purl": "pkg:npm/example-added-trans-1@1.1.0" },
+    { "type": "library", "name": "example-added-trans-2", "version": "1.2.0", "purl": "pkg:npm/example-added-trans-2@1.2.0" },
+    { "type": "library", "name": "example-keep-b", "version": "2.1.0", "purl": "pkg:npm/example-keep-b@2.1.0" }
+  ]
+}

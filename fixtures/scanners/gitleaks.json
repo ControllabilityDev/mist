@@ -1,0 +1,11 @@
+[
+  {
+    "RuleID": "openweather-style-key",
+    "Description": "32-hex API key",
+    "File": "apps/web/.env.example",
+    "StartLine": 3,
+    "Commit": "1111111111111111111111111111111111111111",
+    "Secret": "SECRET-MATERIAL-MUST-NOT-APPEAR-IN-ENVELOPE",
+    "Match": "WEATHER_KEY=SECRET-MATERIAL-MUST-NOT-APPEAR-IN-ENVELOPE"
+  }
+]

@@ -4,9 +4,15 @@
 # Mist may depend on a package that LATER turns out to be compromised -- that is
 # the experiment. It may never KNOWINGLY install one flagged today.
 #
-# Refreshed by the EPIC-03 osv-scanner job, which has not been built yet. Until
-# then this list is maintained by hand and is almost certainly incomplete. An
-# empty-ish denylist is a weak gate; it is not a claim that the tree is clean.
+# The EPIC-03 osv-scanner job now PROPOSES additions to this file. It writes
+# build/advisory-denylist.proposed.txt (scripts/refresh-denylist.mjs) and never
+# edits this file itself: this is an input to a BLOCKING gate, and a
+# non-blocking scan job able to rewrite what blocks merge is exactly backwards.
+# A human copies the additions across.
+#
+# The osv job is dormant until EPIC-02 creates a lockfile, so until then this
+# list is still maintained entirely by hand and is almost certainly incomplete.
+# An empty-ish denylist is a weak gate; it is not a claim that the tree is clean.
 #
 # Format: one package name per line, exactly as it appears in package.json.
 # Blank lines and # comments ignored. A match is a BLOCKING failure.

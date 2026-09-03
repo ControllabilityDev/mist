@@ -56,7 +56,7 @@ This follows the `pkcore` modern convention, not the `cardpack.rs` adaptation.
 | [EPIC-00](EPIC-00_Charter_And_Anti_Kernel_Thesis.md) | Charter & Anti-Kernel Thesis (CHARTER) | The rules of the demonstration: counter-invariants, the Medianness Test | Planned |
 | [EPIC-01](EPIC-01_Safety_Scoping_And_Containment.md) | Safety Scoping & Containment (SAFE) | The exposure/exploitation line; blocks everything else | Planned |
 | [EPIC-02](EPIC-02_The_Weather_Dashboard.md) | The Weather Dashboard (WX) | The working, median, rotten application | Planned |
-| [EPIC-03](EPIC-03_The_Scan_Battery.md) | The Scan Battery (SCAN) | Compensatory observability, wired into CI | Planned |
+| [EPIC-03](EPIC-03_The_Scan_Battery.md) | The Scan Battery (SCAN) | Compensatory observability, wired into CI | Built, mostly dormant — 5 of 7 scanners wake with EPIC-02 |
 | [EPIC-04](EPIC-04_Public_Telemetry_Dashboard.md) | Public Telemetry Dashboard (DASH) | The permanent public artifact; the book's figure | Planned |
 | [EPIC-05](EPIC-05_Violation_Inventory.md) | Violation Inventory (VIOL) | `VIOLATIONS.md` — each dep mapped to the invariant it breaks | Planned |
 | [EPIC-06](EPIC-06_The_Mist_Index.md) | The Mist Index (MI) | Scan spend as a quantitative proxy for surrendered controllability | Planned |

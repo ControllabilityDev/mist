@@ -1,0 +1,18 @@
+{
+  "version": "1.90.0",
+  "results": [
+    {
+      "check_id": "javascript.express.security.audit.express-open-redirect",
+      "path": "apps/web/src/routes/redirect.ts",
+      "start": { "line": 14 },
+      "extra": { "severity": "WARNING", "message": "Possible open redirect from user-controlled input" }
+    },
+    {
+      "check_id": "javascript.lang.security.audit.code-string-concat",
+      "path": "apps/web/src/lib/query.ts",
+      "start": { "line": 62 },
+      "extra": { "severity": "ERROR", "message": "String-concatenated query" }
+    }
+  ],
+  "errors": []
+}

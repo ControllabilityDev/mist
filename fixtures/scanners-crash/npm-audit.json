@@ -1,0 +1,35 @@
+{
+  "auditReportVersion": 2,
+  "vulnerabilities": {
+    "example-transitive-lib": {
+      "name": "example-transitive-lib",
+      "severity": "high",
+      "range": "<2.1.4",
+      "via": [
+        {
+          "source": 1099999,
+          "name": "example-transitive-lib",
+          "title": "Prototype pollution in example-transitive-lib",
+          "severity": "high",
+          "url": "https://github.com/advisories/GHSA-xxxx-xxxx-0001"
+        }
+      ]
+    },
+    "example-deep-dep": {
+      "name": "example-deep-dep",
+      "severity": "moderate",
+      "range": "*",
+      "via": [
+        {
+          "source": 1099998,
+          "name": "example-deep-dep",
+          "title": "Regular expression denial of service",
+          "severity": "moderate",
+          "url": "https://github.com/advisories/GHSA-xxxx-xxxx-0002"
+        },
+        "example-transitive-lib"
+      ]
+    }
+  },
+  "metadata": { "vulnerabilities": { "critical": 0, "high": 1, "moderate": 1, "low": 0, "info": 0, "total": 2 } }
+}

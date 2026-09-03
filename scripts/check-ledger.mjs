@@ -28,6 +28,7 @@ import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve, join } from "node:path";
+import { validate } from "./lib/json-schema-subset.mjs";
 
 const SELF_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -36,57 +37,10 @@ const pass = (n, extra = "") => console.log(`  ok    ${n}${extra ? " " + extra :
 const skip = (n, why) => console.log(`  skip  ${n}\n        ${why}`);
 const fail = (n, why) => { failed = 1; console.log(`  FAIL  ${n}\n        ${why}`); };
 
-// --- a deliberately small JSON Schema subset --------------------------------
-// Enough for schemas/ledger.schema.json: oneOf, $ref/$defs, type, required,
-// additionalProperties:false, enum, const, minimum, minLength, pattern, items.
-// Not a general validator, and it says so rather than pretending otherwise.
-function validate(value, schema, root, path = "") {
-  if (schema.$ref) {
-    const def = schema.$ref.replace(/^#\//, "").split("/").reduce((o, k) => o[k], root);
-    return validate(value, def, root, path);
-  }
-  if (schema.oneOf) {
-    const results = schema.oneOf.map((s) => validate(value, s, root, path));
-    const okCount = results.filter((r) => r.length === 0).length;
-    if (okCount === 1) return [];
-    if (okCount > 1) return [`${path || "/"}: matches more than one record type`];
-    return [`${path || "/"}: matches no record type -- ${results.flat()[0]}`];
-  }
-  const errs = [];
-  if (schema.const !== undefined && value !== schema.const)
-    errs.push(`${path}: expected ${JSON.stringify(schema.const)}`);
-  if (schema.enum && !schema.enum.includes(value))
-    errs.push(`${path}: ${JSON.stringify(value)} not in [${schema.enum.join(", ")}]`);
-  if (schema.type === "integer" && !Number.isInteger(value))
-    errs.push(`${path}: expected integer`);
-  if (schema.type === "string" && typeof value !== "string")
-    errs.push(`${path}: expected string`);
-  if (schema.type === "array" && !Array.isArray(value))
-    errs.push(`${path}: expected array`);
-  if (schema.type === "object" && (typeof value !== "object" || value === null || Array.isArray(value)))
-    errs.push(`${path}: expected object`);
-  if (errs.length) return errs;
-
-  if (schema.minimum !== undefined && value < schema.minimum)
-    errs.push(`${path}: ${value} < minimum ${schema.minimum}`);
-  if (schema.minLength !== undefined && String(value).length < schema.minLength)
-    errs.push(`${path}: shorter than ${schema.minLength}`);
-  if (schema.pattern && !new RegExp(schema.pattern).test(value))
-    errs.push(`${path}: ${JSON.stringify(value)} does not match ${schema.pattern}`);
-  if (schema.items && Array.isArray(value))
-    value.forEach((v, i) => errs.push(...validate(v, schema.items, root, `${path}[${i}]`)));
-
-  if (schema.type === "object" || schema.properties) {
-    for (const key of schema.required ?? [])
-      if (!(key in value)) errs.push(`${path}: missing required field "${key}"`);
-    if (schema.additionalProperties === false)
-      for (const key of Object.keys(value))
-        if (!(key in (schema.properties ?? {}))) errs.push(`${path}: unknown field "${key}"`);
-    for (const [key, sub] of Object.entries(schema.properties ?? {}))
-      if (key in value) errs.push(...validate(value[key], sub, root, `${path}.${key}`));
-  }
-  return errs;
-}
+// --- schema validation ------------------------------------------------------
+// The validator used to live here. EPIC-03 needs the same one for
+// schemas/scan-run.schema.json, so it was extracted to scripts/lib rather than
+// copied -- two divergent validators would drift and neither would be citable.
 
 // --- inputs -----------------------------------------------------------------
 function readLedger(root) {

@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ControllabilityDev/mist/schemas/scan-run.schema.json",
+  "title": "Mist scan-run envelope",
+  "$comment": "The contract EPIC-04 (public dashboard) and EPIC-06 (the Mist Index) consume. Owned by EPIC-03. Raw scanner output is ALSO archived unmodified as a CI artifact; this is the normalized join layer, not a replacement for the evidence. Three fields deserve their rationale up front: `party` carries Mist's first/second-party split, which is the whole differentiation from Juice Shop; `counterInvariant` joins back to docs/ANTI_KERNEL.md CI-1..CI-6; `status` distinguishes a scanner that ran and found nothing from one that never ran -- without it a green dashboard cannot be told from an absent instrument. Validated by the deliberately small subset validator in scripts/lib/json-schema-subset.mjs, so it uses only keywords that validator enforces.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "commit", "ref", "startedAt", "surface", "scanners"],
+  "properties": {
+    "schemaVersion": {
+      "const": "1",
+      "description": "Bump only for a breaking change. EPIC-04 and EPIC-06 branch on this."
+    },
+    "commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$",
+      "description": "Full sha of the tree scanned. Short shas are not accepted: EPIC-07 rescans a frozen tree and must be able to cite it unambiguously."
+    },
+    "ref": { "type": "string", "minLength": 1 },
+    "startedAt": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?Z$",
+      "description": "ISO 8601, UTC, Z-suffixed. EPIC-07 charts on this axis."
+    },
+    "surface": { "$ref": "#/$defs/surface" },
+    "scanners": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/scanner" }
+    }
+  },
+  "$defs": {
+    "surface": {
+      "$comment": "The exposure, counted. Every field is nullable and null means NOT MEASURED -- not zero. Before EPIC-02 lands there is no dependency tree, and reporting 0 transitive packages would be a false green: the single most damaging thing this envelope could say. EPIC-06 must treat null as absent data, never as a zero.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "directDependencies",
+        "transitivePackages",
+        "packagesWithInstallScripts",
+        "packagesWithNetworkAtInstall",
+        "packagesWithNetworkAtImport",
+        "distinctMaintainers"
+      ],
+      "properties": {
+        "directDependencies": { "$ref": "#/$defs/count" },
+        "transitivePackages": { "$ref": "#/$defs/count" },
+        "packagesWithInstallScripts": {
+          "$ref": "#/$defs/count",
+          "description": "Evidences CI-1 (hidden input channels). Install scripts are remote code execution you scheduled yourself."
+        },
+        "packagesWithNetworkAtInstall": { "$ref": "#/$defs/count" },
+        "packagesWithNetworkAtImport": { "$ref": "#/$defs/count" },
+        "distinctMaintainers": {
+          "$ref": "#/$defs/count",
+          "description": "Evidences CI-3 (the boundary is node_modules). The count of parties to the trust relationship."
+        }
+      }
+    },
+    "count": { "type": ["integer", "null"], "minimum": 0 },
+    "scanner": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "status", "version", "exitCode", "durationMs", "findings"],
+      "properties": {
+        "id": {
+          "enum": ["npm-audit", "osv-scanner", "sca-behavioral", "semgrep", "gitleaks", "sbom", "licenses"],
+          "$comment": "The seven scanner classes named at docs/mist-concept-evaluation.md:53-60. Adding an eighth is a deliberate act and must be argued in docs/SCANNERS.md, not slipped in."
+        },
+        "status": {
+          "enum": ["ran", "skipped", "crashed"],
+          "$comment": "ran = produced parseable output. skipped = did not run, and `skipReason` says why (before EPIC-02 there is no tree for five of the seven). crashed = ran and produced nothing usable; `exitCode` is recorded and findings is empty. A crashed scanner is NOT a clean scanner."
+        },
+        "skipReason": {
+          "type": ["string", "null"],
+          "description": "Required in prose, not in schema, when status is skipped. scripts/check-scan.mjs enforces it -- the subset validator has no conditional keywords and pretending otherwise would be worse than an explicit checker."
+        },
+        "version": {
+          "type": ["string", "null"],
+          "description": "The tool version, verbatim. null only when the tool never ran. EPIC-07 compares runs across months; an unversioned finding is not comparable."
+        },
+        "exitCode": { "type": ["integer", "null"] },
+        "durationMs": { "type": ["integer", "null"], "minimum": 0 },
+        "findings": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/finding" }
+        },
+        "unmapped": {
+          "type": "array",
+          "items": { "type": "string" },
+          "$comment": "Finding types this scanner emitted that have no clean CI-1..CI-6 mapping, listed EXPLICITLY. EPIC-03 Test Plan scan-ci-mapping-complete forbids silent nulls and permits deliberate ones. The proportion of unmapped types is itself worth watching."
+        }
+      }
+    },
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "severity", "party", "subject", "counterInvariant", "title"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "severity": { "enum": ["critical", "high", "medium", "low", "info"] },
+        "party": {
+          "enum": ["first", "second"],
+          "$comment": "first = Mist's own code. second = something in node_modules. This split is Mist's core differentiation from Juice Shop, whose flaws are first-party and curated while Mist's are second-party and emergent (docs/mist-concept-evaluation.md:68). If the envelope cannot express it, the dashboard cannot make the argument."
+        },
+        "subject": {
+          "type": "string",
+          "minLength": 1,
+          "description": "package@version for second-party, path:line for first-party."
+        },
+        "counterInvariant": {
+          "type": ["string", "null"],
+          "pattern": "^CI-[1-6]$",
+          "$comment": "Join key to docs/ANTI_KERNEL.md. null is honest when no row fits; the scanner must then list the finding type in `unmapped`."
+        },
+        "title": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

@@ -1,0 +1,1 @@
+{ "status": "skipped", "version": null, "exitCode": null, "durationMs": null, "skipReason": "runner had no network to fetch the gitleaks binary" }

@@ -1,0 +1,18 @@
+{
+  "summary": {
+    "packagesWithInstallScripts": 41,
+    "packagesWithNetworkAtInstall": 6,
+    "packagesWithNetworkAtImport": 3,
+    "distinctMaintainers": 612
+  },
+  "alerts": [
+    { "type": "install-script", "package": "example-native-build", "version": "3.2.0", "severity": "high", "title": "Runs a postinstall script" },
+    { "type": "network-at-install", "package": "example-binary-fetcher", "version": "1.4.1", "severity": "critical", "title": "Downloads a binary during install" },
+    { "type": "network-at-import", "package": "example-phone-home", "version": "0.9.0", "severity": "high", "title": "Opens a connection at import time" },
+    { "type": "env-var-behavior-switch", "package": "example-configurable", "version": "5.0.1", "severity": "medium", "title": "Changes behaviour based on an environment variable" },
+    { "type": "new-maintainer", "package": "example-handover", "version": "2.0.0", "severity": "medium", "title": "Publishing account changed since the last release" },
+    { "type": "global-side-effect-on-import", "package": "example-monkeypatch", "version": "1.1.0", "severity": "medium", "title": "Patches a global prototype at import" },
+    { "type": "obfuscated-code", "package": "example-minified-src", "version": "4.0.0", "severity": "medium", "title": "Ships obfuscated source" },
+    { "type": "unmaintained", "package": "example-abandoned-pkg", "version": "0.0.4", "severity": "low", "title": "No release in 4 years" }
+  ]
+}

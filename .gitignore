@@ -141,3 +141,9 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# EPIC-03 scan battery work area: generated rulesets, raw scanner output,
+# SBOMs and the assembled envelope. Generated, never committed -- a committed
+# gitleaks config is what the no-suppression assertion forbids.
+build/
+scan-run.json

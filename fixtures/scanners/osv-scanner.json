@@ -1,0 +1,25 @@
+{
+  "results": [
+    {
+      "source": { "path": "package-lock.json", "type": "lockfile" },
+      "packages": [
+        {
+          "package": { "name": "example-transitive-lib", "version": "2.1.3", "ecosystem": "npm" },
+          "vulnerabilities": [
+            {
+              "id": "GHSA-xxxx-xxxx-0001",
+              "summary": "Prototype pollution in example-transitive-lib",
+              "database_specific": { "severity": "HIGH" }
+            }
+          ]
+        },
+        {
+          "package": { "name": "example-abandoned-pkg", "version": "0.0.4", "ecosystem": "npm" },
+          "vulnerabilities": [
+            { "id": "MAL-0000-0001", "summary": "Malicious code in example-abandoned-pkg", "database_specific": { "severity": "CRITICAL" } }
+          ]
+        }
+      ]
+    }
+  ]
+}
