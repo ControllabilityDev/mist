@@ -89,24 +89,18 @@ check_roadmap_links() {
   pass "$name ($count linked EPICs resolve)"
 }
 
-# --- docs-readme-has-safety-slot --------------------------------------------
-# Asserts README.md carries the EPIC-01 safety-banner marker. This assertion is
-# DESIGNED TO FAIL once EPIC-01 lands and replaces the marker with the real
-# banner -- that failure is the intended handoff signal, not a regression.
-check_readme_safety_slot() {
-  local name="docs-readme-has-safety-slot"
-
-  if [ ! -f README.md ]; then
-    fail "$name" "README.md does not exist"
-    return
-  fi
-
-  if grep -qF '<!-- EPIC-01: safety banner -->' README.md; then
-    pass "$name"
-  else
-    fail "$name" "marker '<!-- EPIC-01: safety banner -->' not found in README.md (expected until EPIC-01 replaces it)"
-  fi
-}
+# --- docs-readme-has-safety-slot: DELETED by EPIC-01 Phase 2a -------------
+# This assertion required README.md to carry the '<!-- EPIC-01: safety banner -->'
+# placeholder. It was designed to fail once EPIC-01 replaced that marker with the
+# real banner, and that is exactly what happened at EPIC-01. The marker is gone.
+#
+# Its job passed to containment-banner-present in scripts/check-containment.sh,
+# which asserts the banner byte-for-byte AND fails if the old marker reappears.
+# That check BLOCKS merge; this one never did.
+#
+# Do not restore this assertion. A green build here plus a missing banner is the
+# combination EPIC-00 was guarding against, and check-containment.sh guards it
+# properly now.
 
 # --- docs-medianness-examples -----------------------------------------------
 # Asserts docs/MEDIANNESS.md carries at least three worked examples.
@@ -144,7 +138,6 @@ check_no_dependency_surface() {
 printf 'check-docs (EPIC-00 charter assertions)\n'
 check_anti_kernel_ids
 check_roadmap_links
-check_readme_safety_slot
 check_medianness_examples
 check_no_dependency_surface
 

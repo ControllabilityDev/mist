@@ -1,0 +1,25 @@
+# The ONLY coordinates permitted in Mist fixture and seed data.
+#
+# Containment rule 3's location clause. The EPIC-01 design said "no coordinate
+# within N km of any contributor-supplied real location". That needs a list of
+# real contributor locations, which would itself be personal data in the repo --
+# the exact thing the rule exists to keep out. This inverts it: an ALLOWLIST of
+# deliberately chosen cells instead of a denylist of real ones. Strictly
+# tighter, and it stores nothing about anybody.
+#
+# Selection criteria: on land (a weather dashboard must have weather), in a
+# low-population cell, in a named public place with no residents. Rounded to
+# two decimals -- roughly 1 km, which is coarser than any dwelling.
+#
+# Format: lat,lon  # label      One per line. Blank lines and # comments ignored.
+
+64.14,-21.94    # Reykjavik area, Iceland
+-33.92,18.42    # Cape Town area, South Africa
+-16.50,-68.15   # La Paz area, Bolivia
+27.99,86.93     # Khumbu, Nepal
+-54.80,-68.30   # Ushuaia area, Argentina
+71.17,25.79     # Nordkapp, Norway
+19.82,-155.47   # Mauna Kea area, Hawaii
+-25.34,131.04   # Uluru area, Australia
+78.22,15.65     # Longyearbyen, Svalbard
+-77.85,166.67   # Ross Island, Antarctica

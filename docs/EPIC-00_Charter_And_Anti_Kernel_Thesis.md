@@ -29,16 +29,16 @@ that is EPIC-02, and it is deliberately blocked until this lands.
 
 | Component | Status |
 |---|---|
-| `docs/ANTI_KERNEL.md` — thesis + counter-invariant table | **Complete** — written 2026-09-02, pending commit |
-| `docs/MEDIANNESS.md` — the Medianness Test rubric | **Complete** — written 2026-09-02, pending commit |
-| `README.md` — rewritten as the front door of the argument | **Complete** — written 2026-09-02, pending commit |
-| `.github/pull_request_template.md` — medianness + violation prompts | **Complete** — written 2026-09-02, pending commit |
+| `docs/ANTI_KERNEL.md` — thesis + counter-invariant table | **Complete** — committed `f3e9d12`, 2026-09-02 |
+| `docs/MEDIANNESS.md` — the Medianness Test rubric | **Complete** — committed `f3e9d12`, 2026-09-02 |
+| `README.md` — rewritten as the front door of the argument | **Complete** — committed `f3e9d12`, 2026-09-02 |
+| `.github/pull_request_template.md` — medianness + violation prompts | **Complete** — committed `f3e9d12`, 2026-09-02 |
 | `docs/ROADMAP.md` — numbering policy & build order | **Complete** — committed `a14609b`, 2026-08-23 |
-| `CONTRIBUTING.md` — the four standing rules | **Complete** — written 2026-09-02, pending commit |
-| `scripts/check-docs.sh` — structural assertions over the above | **Complete** — written 2026-09-02, pending commit; 5/5 assertions pass |
+| `CONTRIBUTING.md` — the four standing rules | **Complete** — committed `f3e9d12`, 2026-09-02 |
+| `scripts/check-docs.sh` — structural assertions over the above | **Complete** — committed `f3e9d12`, 2026-09-02; 5/5 assertions pass |
 
-*"Pending commit" rows are written and passing in the working tree but not yet
-pinned to a hash. Replace with the landing commit when this EPIC is committed.*
+*All charter documents landed at `f3e9d12` (2026-09-02). `docs/ROADMAP.md`
+predates them at `a14609b`.*
 
 ---
 
@@ -181,7 +181,7 @@ present) do get CI checks, in EPIC-05 and EPIC-08 respectively.
 ### Phase 0 — Repository scaffolding
 
 - [ ] **0a.** Confirm `docs/ROADMAP.md` exists and its EPIC map matches the files
-      on disk (`docs/ROADMAP.md:44-56`).
+      on disk (`docs/ROADMAP.md:56-65`).
 - [ ] **0b.** Create `.github/` directory. No workflows yet — EPIC-03 owns those.
 
 ### Phase 1 — The thesis
@@ -230,7 +230,7 @@ job that EPIC-03 will create:
   `CI-1`..`CI-6`, each on its own table row. Pins the join key that EPIC-05 and
   EPIC-06 depend on.
 - `docs-roadmap-links-resolve` — asserts every `EPIC-NN_*.md` linked from
-  `docs/ROADMAP.md:44-56` exists on disk. Catches a renamed or missing EPIC.
+  `docs/ROADMAP.md:56-65` exists on disk. Catches a renamed or missing EPIC.
 - `docs-readme-has-safety-slot` — asserts `README.md` contains the
   `<!-- EPIC-01: safety banner -->` marker. Fails once EPIC-01 lands and replaces
   it, which is the intended handoff signal.
@@ -310,9 +310,8 @@ Exit criteria:
 
 ## Implementation corrigendum
 
-*Added 2026-09-02, after the charter documents were written. Working tree state;
-not yet pinned to a landing commit. Deltas between the `## Design` section above
-and what actually landed.*
+*Added 2026-09-02. Landed at `f3e9d12`. Deltas between the `## Design` section
+above and what actually landed.*
 
 1. **`scripts/check-docs.sh` carries five assertions, not four.** The Test Plan
    named four; the script adds `docs-no-dependency-surface-yet`
@@ -374,7 +373,7 @@ and what actually landed.*
 | 1 — The thesis | `ANTI_KERNEL.md`: `CI-1`..`CI-6`, scan-spend hypothesis, prior art | **Complete** |
 | 2 — The discipline | `MEDIANNESS.md` (3 worked examples), `CONTRIBUTING.md` | **Complete** |
 | 3 — The front door | `README.md` rewrite + safety slot, PR template | **Complete** |
-| 4 — Close | Status rows flipped; commit hash pending | **Partial** — hashes to be pinned on commit |
+| 4 — Close | Status rows flipped and pinned | **Complete** — `f3e9d12`, 2026-09-02 |
 
 ### Inherited debt
 

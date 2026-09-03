@@ -110,7 +110,7 @@ construction method is itself the exhibit
    scheduled yourself (`docs/mist-concept-evaluation.md:41`). Mist carries the
    full exposure — no `--ignore-scripts`, no cooldown policy, semver ranges wide
    open — precisely so the scans have something true to say
-   (`docs/ROADMAP.md:38-45`).
+   (`docs/ROADMAP.md:40-48`).
 
 ---
 

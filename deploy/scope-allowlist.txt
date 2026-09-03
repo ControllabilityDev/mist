@@ -1,0 +1,36 @@
+# npm scopes permitted in Mist's package.json.
+#
+# A scope NOT on this list is a REVIEW STOP, not an automatic reject: it might be
+# an ordinary well-known publisher nobody added yet, or it might be a slopsquat.
+# Telling those apart is a human's job. Add the scope here, in a PR, with the
+# medianness justification (docs/MEDIANNESS.md).
+#
+# @mist-demo is this project's OWN scope (docs/SLOPSQUAT.md). It is the only
+# scope Mist may ever publish to.
+#
+# One scope per line, leading @ included. Blank lines and # comments ignored.
+
+@mist-demo
+
+# Well-known publishers a median Node/React project reaches in one step.
+@types
+@babel
+@eslint
+@next
+@prisma
+@testing-library
+@vitejs
+@tanstack
+@radix-ui
+@floating-ui
+@emotion
+@mui
+@nodelib
+@isaacs
+@rollup
+@swc
+@esbuild
+@jridgewell
+@pkgjs
+@ampproject
+@sinclair

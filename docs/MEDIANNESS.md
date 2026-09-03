@@ -96,7 +96,7 @@ install script, giving the behavioral SCA scanner (EPIC-03) something to flag.
 
 **Verdict: reject.** Zero of four. And note what is *not* the problem: install
 scripts themselves are in scope and stay enabled — the ROADMAP fixes that
-deliberately (`docs/ROADMAP.md:40`). The exposure is welcome. **Manufacturing
+deliberately (`docs/ROADMAP.md:45`). The exposure is welcome. **Manufacturing
 it is not.** Mist waits for install scripts to arrive on their own, because in
 this ecosystem they will (`docs/mist-concept-evaluation.md:41`).
 

@@ -1,0 +1,53 @@
+# The containment gate -- THE ONE BLOCKING JOB IN MIST.
+#
+# Why this job blocks and the EPIC-03 scan jobs do not:
+#
+#   The scan battery (npm audit, osv-scanner, behavioral SCA, Semgrep, gitleaks,
+#   SBOM, license scan) measures Mist's decay. A red scan is DATA, not a blocker
+#   (docs/ROADMAP.md:48). Gating merge on those findings would stop the project
+#   recording the very thing it exists to record, and would quietly pressure
+#   contributors into adopting mitigations -- standing rule 4's exact failure
+#   mode (CONTRIBUTING.md).
+#
+#   Containment is not decay. It is the wall around the experiment. A breach of
+#   the wall -- an unvetted npm scope, a knowingly-malicious package, a softened
+#   safety banner, a real person's data in a fixture -- is not a measurement.
+#   It is a defect, and it is the difference between "negative control" and
+#   "attractive nuisance" (docs/mist-concept-evaluation.md:82).
+#
+#   So: scans report, this one refuses.
+#
+# Owned by EPIC-01. See scripts/check-containment.sh and deploy/isolation.md.
+
+name: containment
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  containment:
+    name: containment gate (blocking)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Full history: the gate reads committed fixture data, and a shallow
+          # clone would let a breach hide one commit behind the tip.
+          fetch-depth: 0
+
+      # No setup-node step, on purpose. This gate must run before EPIC-02
+      # creates a Node toolchain, and must keep working when the dependency tree
+      # is too broken to install. bash + python3 only, both preinstalled.
+      - name: check-containment
+        run: bash scripts/check-containment.sh
+
+      - name: test-containment
+        run: bash scripts/test-containment.sh
+
+      - name: check-docs
+        run: bash scripts/check-docs.sh

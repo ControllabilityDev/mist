@@ -1,0 +1,45 @@
+# Mail domains that belong to real people. No fixture, seed row, or transcript
+# in this repository may contain an address at any of them.
+#
+# Containment rule 3's data clause (deploy/isolation.md): synthetic only -- no
+# real user, no real email, no real location. Mist's synthetic addresses use
+# example.invalid, which is reserved by RFC 2606 and can never be delivered to.
+#
+# One domain per line. Blank lines and # comments ignored.
+
+gmail.com
+googlemail.com
+yahoo.com
+ymail.com
+hotmail.com
+outlook.com
+live.com
+msn.com
+icloud.com
+me.com
+mac.com
+aol.com
+proton.me
+protonmail.com
+pm.me
+gmx.com
+gmx.net
+mail.com
+zoho.com
+yandex.ru
+qq.com
+163.com
+126.com
+naver.com
+web.de
+t-online.de
+orange.fr
+free.fr
+comcast.net
+verizon.net
+att.net
+sbcglobal.net
+btinternet.com
+fastmail.com
+hey.com
+tutanota.com

@@ -1,0 +1,12 @@
+# Packages Mist may NOT knowingly install: currently flagged as malicious.
+#
+# This is containment rule 1 (SECURITY.md, CONTRIBUTING.md standing rule 2):
+# Mist may depend on a package that LATER turns out to be compromised -- that is
+# the experiment. It may never KNOWINGLY install one flagged today.
+#
+# Refreshed by the EPIC-03 osv-scanner job, which has not been built yet. Until
+# then this list is maintained by hand and is almost certainly incomplete. An
+# empty-ish denylist is a weak gate; it is not a claim that the tree is clean.
+#
+# Format: one package name per line, exactly as it appears in package.json.
+# Blank lines and # comments ignored. A match is a BLOCKING failure.

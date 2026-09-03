@@ -1,0 +1,6 @@
+{
+  "$comment": "Registered @mist-demo placeholder packages. See docs/SLOPSQUAT.md. Rule 1 forbids recording any candidate name here before the @mist-demo scope is registered (EPIC-01 Work Item 3a), so an empty array is the correct state today, not an unfinished one.",
+  "scope": "@mist-demo",
+  "scopeRegistered": false,
+  "placeholders": []
+}
