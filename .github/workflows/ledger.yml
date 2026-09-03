@@ -1,0 +1,52 @@
+# The install-ledger gate -- the SECOND blocking job in Mist.
+#
+# Why this blocks (the same reasoning as containment, a different subject):
+#
+#   A missing ledger entry is UNRECOVERABLE. The moment has passed, and a
+#   backfilled record is indistinguishable from a fabricated one -- one
+#   fabricated record makes the whole file uncitable. So the check has to fire
+#   at the only time it can still be fixed: before the PR lands.
+#
+#   EPIC-03's scanners stay non-blocking (docs/ROADMAP.md:48). Mist blocks on
+#   HONESTY -- containment (EPIC-01) and the ledger (EPIC-08) -- and never on
+#   exposure. That asymmetry is a claim the project is making on purpose.
+#
+# Owned by EPIC-08. See docs/CONSTRUCTION.md and scripts/check-ledger.mjs.
+
+name: ledger
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  ledger:
+    name: install ledger gate (blocking)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Append-only is verified against the base branch, so the base commit
+          # must be in the clone.
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          # No cache: there is no package.json yet, and these scripts have zero
+          # dependencies on purpose. The gate must keep working when the
+          # dependency tree is too broken to install.
+
+      - name: check-ledger
+        env:
+          # Compare against the merge base, not HEAD: on a PR, HEAD is the merge
+          # commit and the ledger's own new lines would look like divergence.
+          MIST_LEDGER_BASE: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || 'HEAD~1' }}
+        run: node scripts/check-ledger.mjs
+
+      - name: test-ledger
+        run: node scripts/test-ledger.mjs

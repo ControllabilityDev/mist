@@ -36,12 +36,19 @@ including the entries that say "a human did this deliberately".
 
 | Component | Status |
 |---|---|
-| `install-ledger.jsonl` — one record per install decision | Planned |
-| `docs/construction-log/` — per-session narratives | Planned |
-| Redaction policy and pass | Planned |
-| Ledger completeness check (CI) | Planned |
-| Surface attribution — packages per decision | Planned |
-| `docs/CONSTRUCTION.md` — method and its honesty rules | Planned |
+| `install-ledger.jsonl` — one record per install decision | **Complete (Phase 0)** — created empty; shape fixed by `schemas/ledger.schema.json`. Records land during EPIC-02. |
+| `docs/construction-log/` — per-session narratives | **Complete (Phase 0)** — directory + `000-scaffold.md`. Session narratives land during EPIC-02. |
+| Redaction policy and pass | **Complete (Phase 0)** — policy `docs/CONSTRUCTION.md:106`; `scripts/redact.mjs` proven on `fixtures/synthetic-transcript.md`. The **human read** is owed per transcript, forever. |
+| Ledger completeness check (CI) | **Complete** — `scripts/check-ledger.mjs`, blocking via `.github/workflows/ledger.yml` |
+| Surface attribution — packages per decision | Planned — Phase 2; needs data that only EPIC-02 can produce |
+| `docs/CONSTRUCTION.md` — method and its honesty rules | **Complete** |
+
+*Phase 0 is complete and is the part with the ordering constraint: it landed
+2026-09-02 with `package.json` confirmed absent, so **EPIC-02 is now unblocked**.
+Phases 1–4 capture during and after EPIC-02.*
+
+**This EPIC cannot close until EPIC-02 closes** — the ledger is captured *during*
+EPIC-02 (`docs/ROADMAP.md:79`). Rows above are Phase 0 scope only.
 
 ---
 
@@ -78,12 +85,12 @@ including the entries that say "a human did this deliberately".
 
 | Domain concept | Code construct | Status |
 |---|---|---|
-| Session (one construction sitting) | `docs/construction-log/NNN-*.md` | ❌ absent |
-| Install Decision | a line in `install-ledger.jsonl` | ❌ absent |
-| Prompt (the intent that produced it) | `prompt` field | ❌ absent |
-| Deliberation (how much thought it got) | `deliberation` enum | ❌ absent |
-| Surface Delta (what it cost) | `packagesAdded` field | ❌ absent |
-| Correction | append-only correction record | ❌ absent |
+| Session (one construction sitting) | `docs/construction-log/NNN-*.md` | ✅ format + session 000 (`docs/construction-log/000-scaffold.md:1`) |
+| Install Decision | a line in `install-ledger.jsonl` | 🟡 shape fixed (`schemas/ledger.schema.json:13`); **file is empty**, and that is correct — no install has happened |
+| Prompt (the intent that produced it) | `prompt` field | ✅ required and non-revisable (`docs/CONSTRUCTION.md:81`) |
+| Deliberation (how much thought it got) | `deliberation` enum | ✅ `schemas/ledger.schema.json:62`; asserted separately by the gate |
+| Surface Delta (what it cost) | `packagesAdded` field | ✅ defined; `transitiveTotalAfter` shares EPIC-03's `surface.transitivePackages` definition |
+| Correction | append-only correction record | ✅ `schemas/ledger.schema.json:83` — requires a `reason` |
 
 ---
 
@@ -363,3 +370,132 @@ Exit criteria:
    doc's prediction (`docs/mist-concept-evaluation.md:35`).
 7. Anything withheld from publication is named, with the reason, in
    `docs/CONSTRUCTION.md`.
+
+
+---
+
+## Implementation corrigendum — Phase 0
+
+*Added 2026-09-02. Working tree state; not yet pinned to a landing commit.
+**Phase 0 only** — Phases 1–4 capture during and after EPIC-02, and this section
+grows when they do. Deltas between the `## Design` section above and what
+actually landed.*
+
+1. **`schemas/secret-patterns.json` was created, and it is not in `## Key Files`.**
+   The `## Reuse` note says to reuse EPIC-03's `gitleaks` ruleset because *"two
+   divergent secret regexes would be a real hazard"*. EPIC-03 does not exist, so
+   waiting would have meant writing the second regex first. This file is now the
+   single source; `redact.mjs` and `check-ledger.mjs` both read it, and it names
+   its own succession (`schemas/secret-patterns.json:4`): **EPIC-03 must generate
+   its `.gitleaks.toml` from this file or cite it, never fork it.**
+
+2. **The correction record type was designed here, not above.** `## Scope` rule 4
+   says corrections are appended rather than edited, and the Domain map lists a
+   "Correction" concept, but no schema was specified. Added as a second record
+   type (`schemas/ledger.schema.json:83`) with a **required `reason`** — a
+   correction with no reason is an edit wearing a costume. Two tests pin it.
+
+3. **`check-ledger.mjs` validates against the schema file rather than carrying
+   its own rules.** It contains a deliberately small JSON Schema subset validator
+   (`scripts/check-ledger.mjs:43`) covering `oneOf`, `$ref`, `type`, `required`,
+   `additionalProperties`, `enum`, `const`, `minimum`, `minLength`, `pattern`,
+   `items`. It is **not** a general validator and its comment says so. Rationale:
+   a published schema nothing validates against is decorative, and a checker with
+   a private copy of the rules drifts from the schema within two edits.
+
+4. **Assertion 5 (`deliberation` in the enum) is checked twice, on purpose.**
+   The schema already rejects a bad value, so the separate assertion
+   (`scripts/check-ledger.mjs`, `ledger-deliberation-enum`) is redundant by
+   construction. It is kept because this is the field that carries the argument:
+   a silent drift here would leave the ledger *valid* and *uninteresting*, which
+   is the worse failure and the harder one to notice.
+
+5. **The gate skips `ledger-completeness` while `package.json` is absent.** It is
+   the load-bearing assertion (`scripts/check-ledger.mjs:167`) and it has nothing
+   to attribute yet. The skip prints its reason and names EPIC-02 as owner. The
+   Gold Standard is proven against fixtures instead, in both directions:
+   an unrecorded install blocks, and adding the record silences the gate
+   (`scripts/test-ledger.mjs:96`).
+
+6. **`redact.mjs` gained a `redactGroup` mechanism** so a redaction keeps its
+   surrounding shape: `api_key: "[REDACTED:generic-api-key-assignment]"` rather
+   than a bare marker, and `WEATHER_API_KEY=[REDACTED:env-dump]` rather than a
+   deleted line. A reader can see **what** was removed, not merely that
+   something was.
+
+7. **Two redaction patterns were wrong on first contact with the fixture and
+   were hardened.** `private-key-block` matched only the PEM *header*, leaving
+   the key body in the transcript. `env-dump` was anchored to column 0 and missed
+   every indented dump — which is how dumps actually appear inside a transcript.
+   Both are now caught. This is the argument for Phase 0d requiring a *proof*
+   rather than a review: the patterns looked right and were not.
+
+8. **The `jwt` pattern never fires on the fixture.** `bearer-token` matches first
+   and consumes the token. The JWT is redacted, so nothing leaks, but the `jwt`
+   rule is currently untested by this fixture. Noted rather than papered over.
+
+9. **`scripts/test-ledger.mjs` was added and is not in `## Key Files`.**
+   17 assertions, zero dependencies, throwaway git repos in a temp dir. The
+   append-only case is the one that needed a real repository: it commits a
+   ledger, quietly "improves" `deliberation` from `reflex` to `researched` in an
+   existing line, and asserts the gate blocks. That edit is the exact dishonesty
+   rule 4 exists to prevent, so it is the exact test worth having.
+
+10. **`.github/workflows/ledger.yml` compares against the merge base, not
+    `HEAD`.** On a pull request `HEAD` is the merge commit, and the ledger's own
+    new lines would read as divergence. `MIST_LEDGER_BASE` carries
+    `origin/<base_ref>` on PRs and `HEAD~1` on pushes. **Untested against real
+    GitHub** — see inherited debt.
+
+11. **`fixtures/synthetic-transcript.md` is a deliberately dirty file.** It holds
+    fake secrets so the redactor can be proven, which puts it on a collision
+    course with EPIC-03's `gitleaks` job. Its email was changed from a
+    `gmail.com` address to `example.com` (RFC 2606 reserved, still not
+    `example.invalid`, so the redactor must still remove it) — so it no longer
+    breaches EPIC-01's real-mail-domain rule. **EPIC-03 must allowlist this one
+    path**, and must not allowlist `docs/construction-log/`, where a finding is a
+    real defect.
+
+12. **`docs/SCANNERS.md` was not created.** The Design says the blocking/reporting
+    asymmetry *"is itself a statement worth making explicitly in
+    `docs/SCANNERS.md`"*. That file is EPIC-03's. The statement is made here
+    instead (`docs/CONSTRUCTION.md:163`), and EPIC-03 should move or cite it.
+
+13. **Session 000 has no transcript, and says so.** A narrative with no
+    transcript and no installs is a legitimate ledger state — the reference case,
+    in fact: the method existing before the first decision it had to record.
+
+14. **Citation correction.** This EPIC cites `docs/mist-concept-evaluation.md:35`
+    for the *"trust decision made in milliseconds"* claim; that text is at `:37`
+    (`:35` is the line *"The mechanism has three parts:"*). The deliverables use
+    `:37`. This is the same defect recorded in EPIC-01's corrigendum item 14, and
+    it has now appeared in three of three EPICs audited. **There is still no
+    citation checker.**
+
+### Phase status summary
+
+| Phase | Scope | Status |
+|---|---|---|
+| 0 — Before the first install | Ledger, schema, narratives, `CONSTRUCTION.md`, redactor, gate | **Complete** — 2026-09-02, `package.json` confirmed absent |
+| 1 — Capture during EPIC-02 | Contemporaneous records, counts, narratives, honest `actor` | **Not started** — owned by EPIC-02's sessions |
+| 2 — Analysis surface | `ledger-report.mjs`, dashboard panel, EPIC-05 cross-links | **Not started** — needs data |
+| 3 — Publication safety | Full redaction pass, `gitleaks` over the log, withholding record | **Not started** — needs transcripts |
+| 4 — Close | Deliberation distribution published truthfully | **Not started** |
+
+### Inherited debt
+
+- **The most important rule cannot be tested.** Rule 2 — *record what was true,
+  not what sounds good* — has no mechanical check and never will. The gate can
+  prove a record **exists**; only a person can make it **honest**. Every
+  assertion in `check-ledger.mjs` is downstream of that unverifiable act.
+- **The human read is unenforceable too.** `docs/CONSTRUCTION.md:144` has an
+  empty reviewer table. Nothing stops a transcript being committed without one
+  except a person choosing not to.
+- **`ledger.yml` has never run on GitHub.** The merge-base logic is reasoned, not
+  observed. The first PR is the test.
+- **EPIC-03 inherits two obligations** it does not yet know about: generate its
+  `gitleaks` config from `schemas/secret-patterns.json` rather than fork it, and
+  allowlist `fixtures/synthetic-transcript.md` while leaving
+  `docs/construction-log/` unallowlisted.
+- **Still no citation checker.** Three EPICs audited, mis-numbered `path:line`
+  citations in all three. This is now the oldest open debt in the repository.

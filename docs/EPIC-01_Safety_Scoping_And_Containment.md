@@ -30,7 +30,7 @@ rule 4 violations and would destroy the measurement. It draws a boundary
 
 | Component | Status |
 |---|---|
-| `SECURITY.md` — what to report, and what not to | **Complete** — written 2026-09-02, pending commit |
+| `SECURITY.md` — what to report, and what not to | **Complete** — committed `adb40ee`, 2026-09-02 |
 | README safety banner (replaces EPIC-00 marker) | **Complete** — `README.md:1-12`, byte-for-byte enforced |
 | Containment boundary — isolated deploy target | 🔒 Gated — `deploy/isolation.md` written; account provisioning (1a) needs a human with a payment method |
 | Synthetic-data-only policy for the two DB tables | **Complete** — `deploy/real-mail-domains.txt`, `deploy/synthetic-locations.txt`, `scripts/seed-synthetic.ts` |
@@ -39,9 +39,9 @@ rule 4 violations and would destroy the measurement. It draws a boundary
 | `scripts/check-containment.sh` + CI gate | **Complete** — 5 assertions; `.github/workflows/containment.yml` blocks |
 | Key-rotation runbook for the weather API key | **Complete** — `docs/KEY_ROTATION.md`; steps 1–5 owed by EPIC-02 Phase 2 |
 
-*"Pending commit" rows are written and passing in the working tree but not yet
-pinned to a hash. `🔒 Gated` rows need a human action outside the repository —
-a cloud account and an npm account — not more code.*
+*Every `**Complete**` row above landed at `adb40ee` (2026-09-02). `🔒 Gated`
+rows need a human action outside the repository — a cloud account and an npm
+account — not more code.*
 
 **This EPIC cannot close until EPIC-02 Phase 2** (K1 committed, then revoked),
 per the prerequisite matrix at `docs/ROADMAP.md:75-79`.
@@ -380,8 +380,8 @@ Exit criteria:
 
 ## Implementation corrigendum
 
-*Added 2026-09-02. Working tree state; not yet pinned to a landing commit.
-Deltas between the `## Design` section above and what actually landed.*
+*Added 2026-09-02. Landed at `adb40ee`. Deltas between the `## Design` section
+above and what actually landed.*
 
 1. **`scripts/check-containment.sh` has five assertions, not four.** The fifth,
    `containment-no-hygiene-mitigation` (`scripts/check-containment.sh:230`),
@@ -500,7 +500,7 @@ Deltas between the `## Design` section above and what actually landed.*
 | 3 — The namespace | Scope registration, policy, inert placeholder | **Partial** — 3b complete; **3a, 3c gated** on an npm account |
 | 4 — The credential lifecycle | Runbook, forward dependency, trigger | **Complete** — 4a written; 4b/4c recorded, executed by EPIC-02 |
 | 5 — The gate | Checker, blocking workflow, synthetic generator | **Complete** — 5 assertions, 12 tests pass |
-| 6 — Close | Status rows, landing commit, registration date | **Partial** — rows flipped; hash and 3a date pending |
+| 6 — Close | Status rows, landing commit, registration date | **Partial** — rows flipped and pinned to `adb40ee`; 3a registration date still owed |
 
 ### Inherited debt
 

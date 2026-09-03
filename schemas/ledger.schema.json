@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ControllabilityDev/mist/schemas/ledger.schema.json",
+  "title": "Mist install ledger entry",
+  "description": "One line of install-ledger.jsonl. Append-only. Two record types: an install decision, and a correction to an earlier record. scripts/check-ledger.mjs validates against THIS FILE -- it does not carry its own copy of the rules, so the schema cannot drift from the checker.",
+
+  "oneOf": [
+    { "$ref": "#/$defs/install" },
+    { "$ref": "#/$defs/correction" }
+  ],
+
+  "$defs": {
+    "install": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["seq", "ts", "session", "actor", "package", "range", "prompt", "deliberation", "packagesAdded", "transitiveTotalAfter"],
+      "properties": {
+        "type": {
+          "const": "install",
+          "description": "Optional on install records; absent means install."
+        },
+        "seq": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Contiguous, strictly increasing across the whole file. A gap means a record was lost."
+        },
+        "ts": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$",
+          "description": "UTC, second precision. Contemporaneous: written at install time, never backfilled."
+        },
+        "session": {
+          "type": "string",
+          "pattern": "^[0-9]{3}$",
+          "description": "Zero-padded session id. Must have a matching docs/construction-log/<session>-*.md narrative."
+        },
+        "actor": {
+          "enum": ["agent", "human"],
+          "description": "Who made the decision. Human installs are expected and are not a failure of the method."
+        },
+        "package": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Direct dependency name as it appears in package.json. Transitive packages are attributed to the direct install that pulled them in, never ledgered separately."
+        },
+        "range": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The semver range written into package.json, e.g. ^0.5.45."
+        },
+        "prompt": {
+          "type": "string",
+          "minLength": 1,
+          "description": "CONTEMPORANEOUS. The intent that produced the install, in the words used at the time. Never revised."
+        },
+        "alternativesConsidered": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "CONTEMPORANEOUS. Empty is the honest common case and carries no penalty. Do not backfill."
+        },
+        "deliberation": {
+          "enum": ["reflex", "brief", "researched"],
+          "description": "CONTEMPORANEOUS. reflex = installed without stopping. brief = a moment's thought or one comparison. researched = alternatives actually evaluated. This field carries the argument; see docs/CONSTRUCTION.md."
+        },
+        "packagesAdded": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Transitive packages this one decision added. The cost of the convenience, at the moment it was incurred."
+        },
+        "transitiveTotalAfter": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total transitive package count immediately after the install, from `npm ls --all --parseable | wc -l`. Same measure as surface.transitivePackages in EPIC-03's scan-run schema -- one definition, so the dashboard and the ledger cannot disagree."
+        },
+        "note": {
+          "type": "string",
+          "description": "RETROSPECTIVE. Hindsight is legitimate and lives only here. Adding a note to an existing record requires a correction entry, never an edit."
+        }
+      }
+    },
+
+    "correction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["seq", "ts", "type", "corrects", "reason"],
+      "properties": {
+        "type": { "const": "correction" },
+        "seq": { "type": "integer", "minimum": 1 },
+        "ts": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$"
+        },
+        "corrects": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "The seq of the record being corrected. That record is NOT edited."
+        },
+        "field": {
+          "type": "string",
+          "description": "Which field the correction concerns. Omit for a whole-record correction."
+        },
+        "value": {
+          "description": "The corrected value, if the correction supplies one."
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Why the original was wrong. A correction with no reason is an edit wearing a costume."
+        }
+      }
+    }
+  }
+}
