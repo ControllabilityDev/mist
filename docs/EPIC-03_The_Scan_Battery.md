@@ -29,7 +29,7 @@ schema; consuming it is downstream work.
 |---|---|
 | `npm audit` job → JSON artifact | **Complete (dormant)** — job built; records `skipped` until EPIC-02 creates a lockfile |
 | `osv-scanner` job → JSON artifact | **Complete (dormant)** — same; binary pinned to `1.9.2` |
-| Behavioral SCA (Socket or equivalent) | Planned — **Phase 2a needs a real tree.** Job records `skipped` with that reason; not stubbed |
+| Behavioral SCA (Socket or equivalent) | **Complete, with a named substitute** — `scripts/sca-static.mjs`, a static approximation. **Socket is still owed** (needs an API token); see corrigendum 9 |
 | `semgrep` SAST over first-party code | **Complete (dormant)** — scoped to `apps/**`, `scripts/**`; wakes when `apps/` exists |
 | `gitleaks` secret detection over full history | **Complete — RUNNING NOW.** The only live scanner. `fetch-depth: 0`, ruleset generated from `schemas/secret-patterns.json` |
 | CycloneDX SBOM generation | **Complete (dormant)** — needs a lockfile |
@@ -552,3 +552,91 @@ actually landed, including three places where this EPIC's own text was wrong.*
   the reader with no reason to believe the rest. `docs/SCANNERS.md` uses the
   corrected numbers, so the two files disagree on purpose until a checker
   exists.
+
+---
+
+## Corrigendum addendum — Phase 2a
+
+*Added 2026-09-04, after EPIC-02 produced a tree to analyse.*
+
+### 9. Socket was not wired, and the substitute is named rather than disguised
+
+Phase 2a asks for "Socket or equivalent". **Socket requires an API token**, which
+requires an account, which requires a human. `npx socket package score npm/express`
+returns *"This command requires a Socket API token"*. That is a hard block and it
+is still owed.
+
+Rather than leave `A3` — 25% of the Mist Index weight — at `not-measured`,
+`scripts/sca-static.mjs` was written: a first-party static text search over
+manifests and entry points. It is wired into `scan.yml` and produces the four
+`surface.*` behavioural counts Phase 2b asks for.
+
+**It is not a behavioural SCA and the repository says so in four places** — the
+script header, `docs/SCANNERS.md`, `docs/MIST_INDEX.md`, and the tool version
+string recorded in every `scan-run.json` (`"sca-static (static approximation;
+Socket still owed)"`). A substitute that quietly wore the name of the tool it
+replaced would poison every number downstream.
+
+**The first real measurements:**
+
+| Measure | Value | Quality |
+|---|---:|---|
+| packages inspected | 700 | — |
+| `packagesWithInstallScripts` | 6 | exact |
+| `packagesWithNetworkAtInstall` | 2 | upper bound |
+| `packagesWithNetworkAtImport` | 15 | **upper bound, loose** |
+| `packagesObfuscated` | 18 | heuristic |
+| `distinctMaintainers` | **479** | exact |
+
+The install-script count independently reproduces the number EPIC-05 measured by
+a different route, which is the only cross-check available.
+
+**479 distinct maintainers** is the number nobody had before. 656 package names,
+479 accounts that can publish into this tree. That is `CI-3` — *"each an
+unaudited party to the trust relationship"* — with the party count filled in.
+
+### 10. Three bugs in the analyser, all found by disbelieving a number
+
+- **`lru-cache` was flagged as reaching the network at import.** A bare `fetch(`
+  pattern matched its *method* named `fetch`. Dropped the pattern; the count went
+  from 16 to 15. One false positive of that kind is enough to distrust the other
+  fifteen.
+- **`0 distinct maintainers across 658 packages`.** The abbreviated npm packument
+  (`application/vnd.npm.install-v1+json`) omits `maintainers` entirely. The result
+  was absurd enough to catch — a subtler field would have shipped. Now reads the
+  full packument.
+- **2 registry lookups "failed".** They were `@mist-demo/api` and
+  `@mist-demo/web`, this repository's own workspaces, which are not published.
+  The script had correctly refused to report a partial count; now it excludes
+  workspace packages by the same `link: true` rule `A1` uses, so the two measures
+  agree about what "the tree" means.
+
+`methods` and `router` remain counted and are **named as known false positives**
+in `docs/SCANNERS.md`. `scripts/test-sca.mjs` asserts they are *still* counted,
+so that quietly tightening the measure makes a test fail rather than making the
+documentation silently wrong.
+
+### 11. The battery caught real decay within a day
+
+Two scan runs on the same lockfile, hours apart: 0 advisories, then 3. Nothing
+installed, removed or upgraded — the lockfile hash is byte-identical to the one
+committed at `8a4b444`. The advisory database changed.
+
+Two of the three are against `mysql2`, a MySQL driver this **SQLite** application
+will never call, present because `prisma` bundles every driver it supports.
+
+Written up at
+[`docs/observations/001-the-tree-decayed-in-one-day.md`](observations/001-the-tree-decayed-in-one-day.md).
+It is EPIC-07's thesis arriving unplanned, and it suggests EPIC-07's monthly
+re-scan cadence is too slow to see the interesting interval.
+
+### Debt this addendum did not pay
+
+- **Socket.** Still owed, still needs a human with an account. When it exists,
+  `sca-static` should become a cross-check and both numbers should be published
+  side by side — a static ceiling next to a behavioural measurement is more
+  informative than either alone.
+- **`A3` remains an upper bound**, and 25% of the Mist Index weight rests on it.
+- **`distinctMaintainers` is opt-in and omitted in CI**, because it makes one
+  registry request per package name. The field reports as not-measured there
+  rather than as 0.

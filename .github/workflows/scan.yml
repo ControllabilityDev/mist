@@ -123,19 +123,38 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
+      - name: install the tree
+        # The analyser reads package manifests and entry points off disk, so the
+        # tree must exist. Install scripts stay ENABLED: --ignore-scripts here
+        # would hide the exact behaviour this job measures.
+        run: |
+          if [ -f package-lock.json ]; then npm ci --no-audit --no-fund; fi
+
       - name: behavioral SCA
         # This is the layer that detects ANTI-KERNEL PROPERTIES rather than known
         # bugs: install scripts, network at install and import, obfuscation,
         # maintainer changes (docs/mist-concept-evaluation.md:54). It is the
         # primary input to the Mist Index (EPIC-06).
         #
-        # NOT YET WIRED TO A TOOL. Phase 2a requires naming the tool, its
-        # version, and what it can and cannot see, in docs/SCANNERS.md. Doing
-        # that honestly needs a real tree to run against. Recorded as skipped
-        # with the reason stated, not stubbed with plausible numbers.
+        # THE TOOL IS scripts/sca-static.mjs, WHICH IS NOT SOCKET AND NOT A
+        # BEHAVIOURAL SCA. Socket -- the tool EPIC-03 names -- needs an API
+        # token, which needs an account, which needs a human. That is still owed.
+        # This is a static text-matching approximation whose network-at-import
+        # figure is an UPPER BOUND, documented as such in docs/SCANNERS.md and in
+        # the script's own header. It exists so A3 has a real number instead of
+        # `not-measured`, not so the gap can be declared closed.
+        #
+        # --maintainers is deliberately omitted here: it makes one npm registry
+        # request per package name, which is slow and flaky in CI. The field is
+        # then reported as NOT MEASURED rather than as 0.
         run: |
-          export MIST_SKIP_REASON="behavioral SCA not yet selected (EPIC-03 Phase 2a); needs a real tree from EPIC-02 to characterise honestly"
-          bash scripts/scan-step.sh sca-behavioral build/raw
+          if [ ! -d node_modules ]; then
+            export MIST_SKIP_REASON="no node_modules: nothing to analyse"
+            bash scripts/scan-step.sh sca-behavioral build/raw
+          else
+            export MIST_TOOL_VERSION="sca-static (static approximation; Socket still owed)"
+            bash scripts/scan-step.sh sca-behavioral build/raw -- node scripts/sca-static.mjs
+          fi
       - uses: actions/upload-artifact@v4
         if: always()
         with:

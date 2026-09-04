@@ -44,19 +44,24 @@ leaderboard, or make normative claims about specific projects. See Scope rule 5.
 
 ### The headline result: the index cannot be computed here
 
-**Two of five axes have an instrument. `MI` is reported as `null`.**
+**Three of five axes have an instrument. `MI` is still reported as `null`.**
 
 | Axis | State | Raw | Score | Weight |
 |---|---|---:|---:|---:|
 | `A1` surface | measured | 794 distinct `name@version` | 70.9 | .30 |
 | `A2` install-execution | measured | 6 packages | 36.7 | .25 |
-| `A3` import-time reach | **not-measured** | — | — | .25 |
+| `A3` import-time reach | **measured (upper bound)** | 15 packages | 76.7 | .25 |
 | `A4` churn | **insufficient-history** (12 days of 90) | — | — | .10 |
 | `A5` red-state | **unavailable** (no EPIC-04) | — | — | .10 |
 
-45% of the weight is unmeasured. No partial score is published: re-normalising
+20% of the weight is unmeasured. No partial score is published: re-normalising
 the measured axes to fill 100 would produce a number that looks like a Mist Index
 and is not one, and it would be quoted as one.
+
+`A3` became measurable on the same day, via EPIC-03 Phase 2a — but by a static
+approximation rather than by Socket, so it is a **ceiling** on the true value.
+25% of the index weight now rests on an upper bound, which is better than resting
+on nothing and worse than resting on a measurement.
 
 ---
 

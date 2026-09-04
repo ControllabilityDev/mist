@@ -120,29 +120,66 @@ something *became* flagged. Decay is data; adoption is a choice.
 
 ## `sca-behavioral` — the interesting layer
 
-**Cannot see** (once a tool is selected). Any behaviour that is data-dependent
-or time-dependent. A package that fetches a remote URL only when an environment
-variable is set, or only after a date, looks inert to static behavioural
-analysis. It also cannot see what a native addon does once compiled, and it
-cannot see intent: an install script that builds a binary and an install script
-that exfiltrates the environment are the same shape.
+**The tool is `scripts/sca-static.mjs`, and it is NOT Socket.**
 
-**Can see.** Anti-kernel *properties* rather than known bugs
-(`docs/mist-concept-evaluation.md:54`): install scripts, network access at
-install and at import, obfuscated source, maintainer changes, environment-driven
-behaviour switches. This is the primary input to the Mist Index (EPIC-06).
+Socket — the tool EPIC-03 names — requires an API token, which requires an
+account, which requires a human. **That remains owed.** What runs instead is a
+static text-matching approximation written for this repository. Naming it
+precisely matters more here than anywhere else in the battery, because its
+`network-at-import` figure is 25% of the Mist Index weight.
+
+| | |
+|---|---|
+| Tool | `scripts/sca-static.mjs` (first-party) |
+| Version | tracked with the repository; no external version |
+| Method | reads `package.json` manifests and entry-point source as **text** |
+| Parses ASTs | no |
+| Executes anything | no |
+| Resolves re-exports | no |
+
+**Cannot see.** Everything a text search cannot see, which is most behaviour.
+Any conduct that is data- or time-dependent — a package that fetches a URL only
+when an environment variable is set, or only after a date — is invisible. So is
+anything a compiled native addon does. So is intent: an install script that
+builds a binary and one that exfiltrates the environment are the same shape to
+this and to Socket alike. It resolves one entry point per package, so a network
+call in a lazily-required submodule is missed.
+
+**Can see, with the bias of each measure stated.**
+
+| Measure | Quality | Bias |
+|---|---|---|
+| `packagesWithInstallScripts` | **exact** | the hook is declared in a manifest or it is not |
+| `packagesWithNetworkAtInstall` | **upper bound** | the install command and any local `.js` it names are searched for network primitives |
+| `packagesWithNetworkAtImport` | **upper bound, and a loose one** | see below |
+| `packagesObfuscated` | **heuristic** | long lines, low newline ratio — most hits are ordinary minified builds |
+| `distinctMaintainers` | **exact**, opt-in | one npm registry request per package name; omitted in CI, where the field reports as not measured rather than 0 |
+
+**Why `network-at-import` is a ceiling, not an estimate.** A package counts if
+its entry point *references* a network module at module scope. **Requiring is not
+calling.** Two known false positives in Mist's own tree, named so the bias is
+checkable rather than abstract:
+
+- `methods` and `router` both `require('http')` at module scope — to read
+  `http.METHODS`, a constant. They open no connections and never will.
+
+A third, `lru-cache`, was caught and removed: a bare `fetch(` pattern matched its
+*method* named `fetch`. One false positive of that kind in a 700-package tree is
+enough to distrust the whole number, so the pattern was dropped.
+
+The figure is therefore a **ceiling on the true value, never an estimate of it**,
+and `docs/MIST_INDEX.md` must not be read as though it were otherwise.
 
 **Counter-invariants.** The richest mapping in the battery — `CI-1` for every
-hidden input channel, `CI-4` for import-time global side effects. Two real
-finding types are deliberately **unmapped**: `obfuscated-code` and
-`unmaintained`. Both are genuine supply-chain hazards, and neither is an
-inversion of a controllability invariant. Forcing them into `CI-1` would inflate
-a number EPIC-06 publishes, so they stay declared-unmapped instead.
+hidden input channel, `CI-4` for import-time global side effects.
+`obfuscated-code` and `unmaintained` are deliberately **unmapped**: both are
+genuine supply-chain hazards, and neither is an inversion of a controllability
+invariant. Forcing them into `CI-1` would inflate a number EPIC-06 publishes.
 
-**Not yet wired.** Phase 2a requires naming the tool, its version, and what it
-can and cannot see — which needs a real tree to be honest about. Until then the
-job records `skipped` with that reason. It is not stubbed with plausible
-numbers.
+**What would replace this.** A Socket token. When one exists, the job should call
+Socket, this script should become a cross-check rather than the source, and the
+two numbers should be published side by side — a static ceiling next to a
+behavioural measurement is more informative than either alone.
 
 ## `semgrep`
 
@@ -290,6 +327,18 @@ Counting it would inflate the number the ledger exists to make citable.
 The ledger gate agrees mechanically: `ledger-completeness` reads
 `package.json`'s direct dependencies, so CI tooling is outside its scope by
 construction, not by exemption.
+
+## The battery has already caught something
+
+Within one day of the tree existing, `npm audit` went from 0 findings to 3 with
+**a byte-identical lockfile**. Nothing was installed, removed or upgraded; the
+advisory database changed. Two of the three advisories are against a MySQL driver
+this SQLite application will never call, present because `prisma` bundles it.
+
+Written up in full at
+[`docs/observations/001-the-tree-decayed-in-one-day.md`](observations/001-the-tree-decayed-in-one-day.md).
+It is EPIC-07's thesis arriving unplanned, and it suggests EPIC-07's monthly
+cadence is too slow.
 
 ## Known gaps in this document
 

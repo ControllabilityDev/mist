@@ -73,16 +73,34 @@ test them.
 
 ## Current status: the index cannot be computed here
 
-**Two of five axes produce a score. The composite is reported as `partial` and
-is not a Mist Index.**
+**Three of five axes produce a score. The composite is still `null`: 20% of the
+weight is unmeasured, and no re-normalisation is performed.**
 
 | Axis | State on this repository | Why |
 |---|---|---|
-| `A1` surface | **measured** | the lockfile is committed |
-| `A2` install-execution | **measured** | install hooks are declared in `package.json` files on disk |
-| `A3` import-time reach | **not-measured** | needs a behavioural SCA; EPIC-03 Phase 2a is still open |
+| `A1` surface | **measured** — 794 | the lockfile is committed |
+| `A2` install-execution | **measured** — 6 | install hooks are declared in `package.json` files on disk |
+| `A3` import-time reach | **measured** — 15, **as an UPPER BOUND** | see the warning below |
 | `A4` churn | **insufficient-history** | needs 90 days of merged PRs; this repository is 12 days old |
 | `A5` red-state | **unavailable** | needs `telemetry/index.json`; EPIC-04 is not built |
+
+### `A3` is a ceiling, not a measurement
+
+`A3` became computable on 2026-09-04, and **not because Socket was wired.**
+Socket needs an API token that nobody has. What runs is
+`scripts/sca-static.mjs`, a first-party static text search, and its
+`network-at-import` figure counts any package whose entry point *references* a
+network module at module scope.
+
+**Requiring is not calling.** Two of the 15 packages counted — `methods` and
+`router` — require `http` only to read the constant `http.METHODS`. They open no
+connections. `A3` is therefore a **ceiling on the true value**, and 25% of the
+index weight currently rests on it.
+
+This is written here rather than in a footnote because a reader comparing two
+repositories on `A3` would otherwise be comparing two ceilings and calling it a
+measurement. Full bias table in
+[`docs/SCANNERS.md`](SCANNERS.md#sca-behavioral--the-interesting-layer).
 
 A missing axis is reported as missing. It is never imputed, defaulted to zero, or
 quietly dropped from the denominator — all three would produce a number that
