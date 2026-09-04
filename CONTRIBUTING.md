@@ -30,8 +30,32 @@ here once so it is never re-argued in a PR. It covers EPIC-01's artifacts only �
 **it does not extend to `package.json`**, and it is not a route to a mitigation
 (rule 4 still binds).
 
-*Enforced by:* `.github/pull_request_template.md` at review time — by human
-judgement, deliberately not by CI. Owned by EPIC-00.
+**The instruments are exempt too.** `site/` (the dashboard, EPIC-04),
+`tools/mist-index/` (EPIC-06), and the `scripts/*.mjs` gates are built
+kernel-style: zero runtime dependencies, Node standard library only.
+
+This is the sharpest exemption in the project and it deserves its reason stated
+rather than assumed. **A thermometer is not made of fever.** An instrument built
+out of the thing it measures cannot be trusted twice over: its own supply chain
+becomes a confound in every reading, and a compromise of the instrument corrupts
+the record it exists to preserve. If the dashboard pulled in a charting library
+and 400 transitive packages, every number on it would be reporting partly on
+itself.
+
+The contrast is also the thesis in miniature, and it is free evidence: **the one
+part of this repository built kernel-style needs no scanner.** Nothing in the
+scan battery has anything to say about `site/` or `tools/mist-index/`, because
+there is nothing there to say it about.
+
+This exemption covers instruments only. It does not extend to `package.json`, to
+`apps/`, or to anything the scanners measure — and like the containment
+exemption, it is not a route to a mitigation. Rule 4 still binds.
+
+*Enforced by:* `dash-zero-deps` and `mi-zero-deps` mechanically, plus
+`.github/pull_request_template.md` at review time. The containment exemption is
+enforced by human judgement, deliberately not by CI; the instrument exemption is
+enforced by both, because "did somebody add a dependency" is a question a machine
+can answer. Owned by EPIC-00, extended by EPIC-04.
 
 ### 2. Exposure, not exploitation
 

@@ -30,16 +30,24 @@ curve (EPIC-07), though it reserves the panel slot for it.
 
 | Component | Status |
 |---|---|
-| `telemetry` orphan branch — append-only run history | Planned |
-| Static site build (`site/`) | Planned |
-| Panel: current battery status | Planned |
-| Panel: surface growth over time | Planned |
-| Panel: findings by counter-invariant (`CI-1`..`CI-6`) | Planned |
-| Panel: first-party vs second-party split | Planned |
-| Panel: decay curve (slot reserved, EPIC-07) | 🔒 Gated |
-| Panel: Mist Index (slot reserved, EPIC-06) | 🔒 Gated |
-| GitHub Pages publication | Planned |
-| Permanent-URL policy | Planned |
+| `telemetry` orphan branch — append-only run history | **Complete in code, branch not created** — `scripts/append-telemetry.mjs` + the workflow create it on first run; the agent may not create branches |
+| Static site build (`site/`) | **Complete** — `site/build.mjs`, **zero dependencies** |
+| Panel: current battery status | **Complete** — 7 metrics with per-run deltas |
+| Panel: surface growth over time | **Complete** — 4 series, inline SVG |
+| Panel: findings by counter-invariant (`CI-1`..`CI-6`) | **Complete** — plus `unmapped`, explained |
+| Panel: first-party vs second-party split | **Complete** — headline figures and both series |
+| Panel: decay curve (slot reserved, EPIC-07) | 🔒 Gated — renders as a labelled placeholder |
+| Panel: Mist Index (slot reserved, EPIC-06) | 🔒 Gated — renders as a labelled placeholder |
+| GitHub Pages publication | 🔒 **Blocked** — `.github/workflows/publish-telemetry.yml` is written; **enabling Pages needs a repo admin** |
+| Permanent-URL policy | **Complete** — `docs/DASHBOARD.md`, stated as a stability commitment |
+| `scripts/check-dashboard.mjs` + `test-dashboard.mjs` | **Complete** — 6 assertions, 18 tests |
+
+*All rows landed 2026-09-04. Commit pin owed next session.*
+
+**Verified in a real browser at 1280×720**, not asserted: the framing sentence and
+all seven headline metrics fit in one screenshot with no scrolling. That is the
+book-figure constraint (Phase 5a) and it drove a two-column layout that the
+first draft did not have.
 
 ---
 
@@ -326,3 +334,102 @@ Exit criteria:
    first/second-party split; decay and index render as labelled 🔒 placeholders.
 6. Every chart has a `<table>` fallback carrying the same numbers.
 7. No filter, acknowledge, or snooze control exists anywhere on the page.
+
+---
+
+## Implementation corrigendum
+
+*Added 2026-09-04. What landed, and four things the browser found that reading
+the code did not.*
+
+### 1. Publication is blocked on a repo admin, not on code
+
+`.github/workflows/publish-telemetry.yml` is written and will create the
+`telemetry` orphan branch on its first run, append the envelope, verify
+append-only, build the site and deploy to Pages. **It has never run**, because
+GitHub Pages must be enabled on the repository by a human with admin rights.
+
+The agent also cannot create the orphan branch directly — state-changing git
+commands are off limits in this repository — so the branch is created by CI on
+first execution rather than by hand. That is arguably better: the branch's first
+commit is then a machine-verifiable record rather than a manual setup step
+nobody documented.
+
+`docs/DASHBOARD.md` states the permanent URL as a **commitment, not a live
+link**, and says so explicitly rather than implying the page is up.
+
+### 2. The book-figure constraint changed the layout, and only a browser showed it
+
+Phase 5a asks that the headline be readable at 1280×720 with no scrolling. The
+first draft stacked the framing block above the status panel, and in an actual
+browser the metrics table fell below the fold — the screenshot showed the claim
+without the numbers, which is exactly the useless half.
+
+Rebuilt as a two-column fold above 1000px. Verified in Chrome at 1280×720:
+framing sentence and all seven metrics in one view. **This was not visible from
+reading the HTML**, and would not have been caught by any assertion written
+without looking.
+
+### 3. Three rendering bugs, all found by looking
+
+- **The charts were ~280px tall each.** An `<svg>` with `width: 100%` and
+  `height: auto` grows its height with the viewport; at 1180px wide, six small
+  charts became several screens of scrolling. Capped at the natural 640×150 and
+  laid out two-up.
+- **The data-fallback tables were invisible but still occupying layout.**
+  `max-height: 0` does not collapse a `<table>`. The charts floated in a sea of
+  empty space. Replaced with `<details>`, which collapses reliably and gives
+  keyboard and screen-reader access for free — the CSS version gave neither.
+- **The `<svg>` scaling and the fallback collapse were both "obviously correct"
+  when written.** Neither was.
+
+### 4. The no-filters check failed on the page's own disclaimer
+
+`dash-no-filters` originally grepped for the words *acknowledge*, *snooze* and
+*mute*. It failed immediately — on the footer sentence *"There is deliberately
+no severity filter, no acknowledge control and no snooze."*
+
+**A check that cannot tell a disclaimer from the thing it disclaims is worse than
+no check**, because the obvious way to make it pass is to delete the sentence —
+removing the honest statement and leaving the hazard.
+
+Rewritten to assert the page contains **no interactive controls at all**:
+no `<button>`, `<input>`, `<select>`, `<textarea>`, `<form>`, inline event
+handler, or `<script>`. That is a stronger claim than "no snooze button" and a
+far easier one to verify. `<details>`/`<summary>` are permitted; they hold
+duplicate chart data and cannot hide a finding.
+
+### 5. A crashed scanner renders RED, and there is a test for it
+
+The status panel computes red as *findings > 0 **or** any scanner crashed*. A run
+with zero findings and a crashed semgrep is **not** green, and
+`dash-crashed-scanner-is-red` builds exactly that fixture and asserts it. This is
+the same false-green failure that `status` exists to prevent in the EPIC-03
+envelope, arriving one layer up.
+
+Skipped scanners are listed separately, with the sentence *"a skipped scanner
+reports nothing, which is not the same as reporting zero."*
+
+### 6. The append-only rule is enforced in two places
+
+`scripts/append-telemetry.mjs` refuses to overwrite a recorded run or re-add an
+existing index entry, and `dash-append-only` compares the branch before and after
+and fails if anything changed or disappeared. The Gold Standard test edits a past
+run to *make it greener* and asserts the gate refuses — that being the specific
+dishonesty the rule exists to prevent.
+
+A run is keyed by commit **and** timestamp, not commit alone: EPIC-07 rescans the
+same frozen commit on purpose, and the second scan is a new observation rather
+than a correction of the first.
+
+### Debt this EPIC did not pay
+
+- **Nothing is published.** Every number on the page today comes from
+  `fixtures/telemetry/`, which is invented and labelled as such. The real record
+  is empty until CI runs.
+- **`A5` is still unavailable to EPIC-06**, because that needs a real record with
+  history, which needs publication, which needs Pages enabled.
+- **No print rendering was verified.** The print stylesheet exists; nobody has
+  printed the page.
+- **Light mode was not visually checked.** The tokens are defined and the browser
+  was in dark mode. Stated rather than assumed.

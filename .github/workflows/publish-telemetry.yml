@@ -1,0 +1,107 @@
+# Appends the scan record and publishes the dashboard (EPIC-04).
+#
+# NOT A BLOCKING JOB. This publishes a measurement; it does not judge one.
+# Mist's blocking jobs are containment.yml (EPIC-01), ledger.yml (EPIC-08) and
+# violations.yml (EPIC-05) -- all three about HONESTY, none about exposure.
+#
+# The record lives on the `telemetry` ORPHAN BRANCH, not on main. Scan output on
+# main would churn its history on every push and pollute the SBOM diff that
+# EPIC-03 computes against main. An orphan branch keeps the record permanent and
+# the specimen clean.
+#
+# THE RECORD IS APPEND-ONLY. A run that was red stays red, including runs that
+# were red because of a Mist bug. check-dashboard.mjs compares the branch before
+# and after and fails if an existing run changed or disappeared.
+#
+# Owned by EPIC-04. See docs/DASHBOARD.md.
+
+name: publish-telemetry
+
+on:
+  workflow_run:
+    workflows: [scan]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  # One writer at a time. Two jobs appending to an append-only branch would
+  # race, and the loser's run would vanish -- which is exactly the thing the
+  # append-only rule exists to prevent.
+  group: telemetry-record
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    # Runs even when the scan workflow reports failure: a crashed scanner is a
+    # measurement worth recording, and a run that is missing from the record
+    # because the battery had a bad day is a hole in the evidence.
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion != 'cancelled'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: download the scan artifacts
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: scan-run
+          path: incoming
+          run-id: ${{ github.event.workflow_run.id || github.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: fetch the existing record
+        run: |
+          git fetch origin telemetry:telemetry 2>/dev/null || {
+            echo "no telemetry branch yet -- creating it"
+            git checkout --orphan telemetry
+            git rm -rf . >/dev/null 2>&1 || true
+            mkdir -p runs
+            printf '{\n  "schemaVersion": "1",\n  "recordStarted": null,\n  "runs": []\n}\n' > index.json
+            git add index.json
+            git -c user.name=mist-ci -c user.email=ci@example.invalid commit -m "telemetry: start the record"
+            git push origin telemetry
+            git checkout -
+          }
+          rm -rf base && git worktree add base telemetry 2>/dev/null || git clone -b telemetry . base
+
+      - name: append this run
+        run: |
+          if [ ! -f incoming/scan-run.json ]; then
+            echo "no scan-run.json in the artifact -- nothing to append."
+            exit 0
+          fi
+          node scripts/append-telemetry.mjs --record base --envelope incoming/scan-run.json
+
+      - name: verify the record is still append-only
+        run: |
+          node scripts/check-dashboard.mjs --telemetry base --base-telemetry base
+
+      - name: build the dashboard
+        run: node site/build.mjs --telemetry base --out site/dist
+
+      - name: commit the record
+        run: |
+          cd base
+          if git diff --quiet && git diff --cached --quiet && [ -z "$(git status --porcelain)" ]; then
+            echo "nothing new to record"; exit 0
+          fi
+          git add -A
+          git -c user.name=mist-ci -c user.email=ci@example.invalid \
+            commit -m "telemetry: record run ${{ github.sha }}"
+          git push origin HEAD:telemetry
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site/dist
+      - id: deployment
+        uses: actions/deploy-pages@v4

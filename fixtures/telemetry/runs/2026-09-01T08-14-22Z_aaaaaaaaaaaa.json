@@ -1,0 +1,177 @@
+{
+  "schemaVersion": "1",
+  "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "ref": "main",
+  "startedAt": "2026-09-01T08:14:22Z",
+  "surface": {
+    "directDependencies": 22,
+    "transitivePackages": 520,
+    "packagesWithInstallScripts": 4,
+    "packagesWithNetworkAtInstall": 2,
+    "packagesWithNetworkAtImport": 9,
+    "distinctMaintainers": 390
+  },
+  "scanners": [
+    {
+      "id": "npm-audit",
+      "status": "ran",
+      "skipReason": null,
+      "version": "11.0.0",
+      "exitCode": 0,
+      "durationMs": 1000,
+      "findings": [
+        {
+          "id": "npm-audit:0",
+          "severity": "high",
+          "party": "second",
+          "subject": "example-pkg-0@1.0.0",
+          "counterInvariant": "CI-3",
+          "title": "finding 0"
+        },
+        {
+          "id": "npm-audit:1",
+          "severity": "medium",
+          "party": "second",
+          "subject": "example-pkg-1@1.0.0",
+          "counterInvariant": "CI-3",
+          "title": "finding 1"
+        }
+      ],
+      "unmapped": []
+    },
+    {
+      "id": "osv-scanner",
+      "status": "skipped",
+      "skipReason": "not installed",
+      "version": null,
+      "exitCode": null,
+      "durationMs": null,
+      "findings": [],
+      "unmapped": []
+    },
+    {
+      "id": "sca-behavioral",
+      "status": "ran",
+      "skipReason": null,
+      "version": "sca-static",
+      "exitCode": 0,
+      "durationMs": 2000,
+      "findings": [
+        {
+          "id": "sca:0",
+          "severity": "high",
+          "party": "second",
+          "subject": "example-pkg-0@1.0.0",
+          "counterInvariant": "CI-1",
+          "title": "finding 0"
+        },
+        {
+          "id": "sca:1",
+          "severity": "medium",
+          "party": "second",
+          "subject": "example-pkg-1@1.0.0",
+          "counterInvariant": "CI-1",
+          "title": "finding 1"
+        },
+        {
+          "id": "sca:2",
+          "severity": "medium",
+          "party": "second",
+          "subject": "example-pkg-2@1.0.0",
+          "counterInvariant": "CI-1",
+          "title": "finding 2"
+        },
+        {
+          "id": "sca:3",
+          "severity": "high",
+          "party": "second",
+          "subject": "example-pkg-3@1.0.0",
+          "counterInvariant": "CI-1",
+          "title": "finding 3"
+        }
+      ],
+      "unmapped": [
+        "obfuscated-code"
+      ]
+    },
+    {
+      "id": "semgrep",
+      "status": "ran",
+      "skipReason": null,
+      "version": "1.0.0",
+      "exitCode": 0,
+      "durationMs": 900,
+      "findings": [],
+      "unmapped": [
+        "sast"
+      ]
+    },
+    {
+      "id": "gitleaks",
+      "status": "ran",
+      "skipReason": null,
+      "version": "8.0.0",
+      "exitCode": 0,
+      "durationMs": 400,
+      "findings": [],
+      "unmapped": [
+        "secret-in-history"
+      ]
+    },
+    {
+      "id": "sbom",
+      "status": "ran",
+      "skipReason": null,
+      "version": "1.0.0",
+      "exitCode": 0,
+      "durationMs": 800,
+      "findings": [],
+      "unmapped": []
+    },
+    {
+      "id": "licenses",
+      "status": "ran",
+      "skipReason": null,
+      "version": "24",
+      "exitCode": 0,
+      "durationMs": 600,
+      "findings": [
+        {
+          "id": "license:0",
+          "severity": "high",
+          "party": "second",
+          "subject": "example-pkg-0@1.0.0",
+          "counterInvariant": null,
+          "title": "finding 0"
+        },
+        {
+          "id": "license:1",
+          "severity": "medium",
+          "party": "second",
+          "subject": "example-pkg-1@1.0.0",
+          "counterInvariant": null,
+          "title": "finding 1"
+        },
+        {
+          "id": "license:2",
+          "severity": "medium",
+          "party": "second",
+          "subject": "example-pkg-2@1.0.0",
+          "counterInvariant": null,
+          "title": "finding 2"
+        },
+        {
+          "id": "license:3",
+          "severity": "high",
+          "party": "second",
+          "subject": "example-pkg-3@1.0.0",
+          "counterInvariant": null,
+          "title": "finding 3"
+        }
+      ],
+      "unmapped": [
+        "license-obligation"
+      ]
+    }
+  ]
+}

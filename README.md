@@ -82,7 +82,7 @@ being.
 | [`docs/ROADMAP.md`](docs/ROADMAP.md) | EPIC map, build order, and the fixed toolchain decisions |
 | [`docs/mist-concept-evaluation.md`](docs/mist-concept-evaluation.md) | The original concept evaluation that argues Mist is worth building |
 | [`VIOLATIONS.md`](VIOLATIONS.md) | Each dependency and first-party seam mapped to the counter-invariant it exhibits, with evidence that resolves against the tree. Generated from `violations.json`; a hand edit fails CI. |
-| The public telemetry dashboard | The permanent scan artifact — **not yet built** (EPIC-04) |
+| [The public telemetry dashboard](docs/DASHBOARD.md) | The permanent scan artifact. Built and verified; publication needs GitHub Pages enabled. Zero dependencies — the instrument is not made of the specimen. |
 
 ## Current state
 

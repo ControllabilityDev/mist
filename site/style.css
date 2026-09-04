@@ -1,0 +1,130 @@
+/* Mist telemetry dashboard. Hand-written, no framework, no build step.
+   Light, dark and print, because book figures get printed.
+   The headline block must be legible at 1280x720 with no scrolling. */
+
+:root {
+  --bg: #f7f8fa; --fg: #1b1f24; --muted: #5c6672; --line: #d8dde3;
+  --card: #ffffff; --red: #b4232c; --green: #1f7a44; --accent: #2f6fd0;
+  --up: #b4232c; --down: #1f7a44;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #14171a; --fg: #e6e9ed; --muted: #9aa4b0; --line: #2a3038;
+    --card: #1b1f24; --red: #ff6b6b; --green: #4ade80; --accent: #6ea8ff;
+    --up: #ff6b6b; --down: #4ade80;
+  }
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--fg);
+  font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+}
+main { max-width: 860px; margin: 0 auto; padding: 20px 20px 64px; }
+h1 { font-size: 26px; margin: 0 0 6px; letter-spacing: -0.01em; }
+h2 { font-size: 18px; margin: 0 0 10px; }
+h3 { font-size: 15px; margin: 0 0 8px; }
+p { margin: 0 0 10px; }
+code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .92em; }
+a { color: var(--accent); }
+.muted { color: var(--muted); font-size: 13px; }
+.warn { color: var(--red); font-weight: 600; }
+
+/* --- the framing block: this is what a book screenshot must explain --- */
+/* The fold: the framing sentence and the numbers must BOTH be visible in one
+   1280x720 screenshot, because that screenshot is a book figure and it has to
+   explain itself without the surrounding chapter. Two columns once there is
+   room; stacked below that. */
+.fold { display: grid; gap: 14px; margin-bottom: 18px; }
+@media screen and (min-width: 1000px) {
+  main { max-width: 1180px; }
+  .fold { grid-template-columns: 1fr 1fr; align-items: start; }
+  .fold > * { margin-bottom: 0; height: 100%; }
+}
+
+.framing {
+  border: 2px solid var(--fg); border-radius: 12px;
+  padding: 16px 18px; background: var(--card);
+}
+.framing h1 { font-size: 22px; }
+.framing p { font-size: 14px; }
+.bill {
+  font-weight: 700; letter-spacing: .04em; font-size: 15px;
+  margin: 0 0 10px; text-transform: uppercase;
+}
+
+.panel {
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: 12px; padding: 16px 18px; margin-bottom: 18px;
+}
+.panel.status { border-left: 5px solid var(--green); }
+.panel.status.red { border-left-color: var(--red); }
+.status h2 { display: flex; align-items: center; gap: 8px; }
+.dot { width: 11px; height: 11px; border-radius: 50%; background: var(--green); display: inline-block; }
+.status.red .dot { background: var(--red); }
+.state { font-size: 14px; letter-spacing: .08em; }
+.status.red .state { color: var(--red); }
+
+table { border-collapse: collapse; width: 100%; font-size: 14px; margin: 10px 0; }
+caption { text-align: left; color: var(--muted); font-size: 12px; padding-bottom: 6px; }
+th, td { text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--line); }
+th[scope="row"] { font-weight: 500; }
+td.n { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+td.dlt { text-align: right; width: 90px; }
+.d { font-variant-numeric: tabular-nums; font-size: 13px; }
+.d.up { color: var(--up); }
+.d.down { color: var(--down); }
+.d.flat { color: var(--muted); }
+
+/* --- the first/second party split --- */
+.split { display: flex; gap: 12px; margin: 12px 0; }
+.half {
+  flex: 1; border: 1px solid var(--line); border-radius: 10px;
+  padding: 14px; display: flex; flex-direction: column; gap: 2px;
+}
+.half .big { font-size: 34px; font-weight: 300; line-height: 1; font-variant-numeric: tabular-nums; }
+.half span:last-child { font-size: 12px; color: var(--muted); }
+.half.second { border-left: 4px solid var(--accent); }
+.half.first { border-left: 4px solid var(--muted); }
+
+/* --- charts --- */
+/* Charts are laid out two-up on wide screens. Each SVG is capped at its natural
+   640x150 so it is never scaled up -- an <svg> with width:100% and height:auto
+   grows its height with the viewport, and at 1180px these rendered ~280px tall
+   each, turning six small charts into several screens of scrolling. */
+.charts { display: grid; gap: 16px; }
+@media screen and (min-width: 900px) { .charts { grid-template-columns: 1fr 1fr; } }
+.chart { margin: 0; min-width: 0; }
+.chart figcaption { font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+.chart svg { width: 100%; max-width: 640px; height: auto; display: block; }
+.chart .line { fill: none; stroke: var(--accent); stroke-width: 2; }
+.chart circle { fill: var(--accent); }
+.chart .axis { stroke: var(--line); stroke-width: 1; }
+.chart .tick { fill: var(--muted); font-size: 10px; }
+.chart .tick.end { text-anchor: end; }
+
+/* The fallback table is always in the DOM -- the data must survive the SVG. It
+   is collapsed behind <details> rather than by CSS, because max-height does not
+   collapse a <table>: the first attempt left an invisible table occupying layout
+   space and the charts floated in a sea of nothing. <details> also gives
+   keyboard and screen-reader access for free, which the CSS version did not. */
+.fallback-wrap { margin-top: 4px; }
+.fallback-wrap summary { font-size: 12px; color: var(--muted); cursor: pointer; }
+.chart-fallback { font-size: 12px; }
+
+/* --- CI-* bars --- */
+.bars { display: flex; flex-direction: column; gap: 6px; margin: 12px 0; }
+.bar { display: grid; grid-template-columns: 72px 1fr 44px; align-items: center; gap: 10px; font-size: 13px; }
+.bar .track { background: var(--bg); border: 1px solid var(--line); border-radius: 4px; height: 16px; }
+.bar .fill { display: block; height: 100%; background: var(--accent); border-radius: 3px; }
+.bar .v { text-align: right; font-variant-numeric: tabular-nums; }
+
+.panel.gated { border-style: dashed; opacity: .85; }
+footer { margin-top: 26px; color: var(--muted); font-size: 13px; }
+
+@media print {
+  :root { --bg: #fff; --card: #fff; --fg: #000; --muted: #444; --line: #bbb; }
+  body { font-size: 11pt; }
+  .panel, .framing { break-inside: avoid; }
+  .fallback-wrap { display: none; } /* charts print; the duplicate table does not */
+}

@@ -57,7 +57,7 @@ This follows the `pkcore` modern convention, not the `cardpack.rs` adaptation.
 | [EPIC-01](EPIC-01_Safety_Scoping_And_Containment.md) | Safety Scoping & Containment (SAFE) | The exposure/exploitation line; blocks everything else | Landed — one gap found by EPIC-02: a global `~/.npmrc` bypasses the hygiene check |
 | [EPIC-02](EPIC-02_The_Weather_Dashboard.md) | The Weather Dashboard (WX) | The working, median, rotten application | Built — 737 packages, live weather, K1 committed and revoked. Deploy still blocked |
 | [EPIC-03](EPIC-03_The_Scan_Battery.md) | The Scan Battery (SCAN) | Compensatory observability, wired into CI | Live — first real run 2026-09-03; behavioural SCA still unwired (Phase 2a) |
-| [EPIC-04](EPIC-04_Public_Telemetry_Dashboard.md) | Public Telemetry Dashboard (DASH) | The permanent public artifact; the book's figure | Planned |
+| [EPIC-04](EPIC-04_Public_Telemetry_Dashboard.md) | Public Telemetry Dashboard (DASH) | The permanent public artifact; the book's figure | Built, unpublished — needs GitHub Pages enabled by an admin |
 | [EPIC-05](EPIC-05_Violation_Inventory.md) | Violation Inventory (VIOL) | `VIOLATIONS.md` — each dep mapped to the invariant it breaks | Landed — 47 entries, 19 evidenced violations, blocking gate |
 | [EPIC-06](EPIC-06_The_Mist_Index.md) | The Mist Index (MI) | Scan spend as a quantitative proxy for surrendered controllability | Built — and reports NOT COMPUTABLE: 3 of 5 axes have no instrument |
 | [EPIC-07](EPIC-07_Longitudinal_Decay.md) | Longitudinal Decay (DECAY) | A frozen tree rescanned monthly; telemetry of entropy | Planned |
