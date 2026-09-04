@@ -7,5 +7,14 @@
     "Commit": "1111111111111111111111111111111111111111",
     "Secret": "SECRET-MATERIAL-MUST-NOT-APPEAR-IN-ENVELOPE",
     "Match": "WEATHER_KEY=SECRET-MATERIAL-MUST-NOT-APPEAR-IN-ENVELOPE"
+  },
+  {
+    "RuleID": "curl-auth-header",
+    "Description": "",
+    "File": "fixtures/synthetic-transcript.md",
+    "StartLine": 19,
+    "Commit": "2222222222222222222222222222222222222222",
+    "Secret": "SECRET-MATERIAL-MUST-NOT-APPEAR-IN-ENVELOPE",
+    "Match": "curl -H 'Authorization: Bearer SECRET-MATERIAL-MUST-NOT-APPEAR-IN-ENVELOPE'"
   }
 ]

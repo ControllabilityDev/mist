@@ -136,6 +136,28 @@ function ci(scannerId, type, seen) {
  */
 const scrubbed = (s) => String(s ?? "").replace(/\s+/g, " ").trim().slice(0, 200);
 
+/**
+ * The first candidate that still carries text after scrubbing.
+ *
+ * `??` falls back on null and undefined and NOT on "". Upstream text has THREE
+ * states -- present, absent, and present-but-empty -- and `??` only knows two.
+ * gitleaks 8.21.2 ships built-in rules with an empty Description (the built-in
+ * curl-auth-header is one, and it fired on a real commit), so
+ * `f.Description ?? f.RuleID` resolved to "" and the envelope failed
+ * `title: minLength 1` -- correctly reported as a broken instrument, which
+ * blocked the whole battery.
+ *
+ * Every title chain below must therefore end in a literal. A chain that ends in
+ * another foreign field has only moved the same bug one step along.
+ */
+const firstText = (...candidates) => {
+  for (const c of candidates) {
+    const t = scrubbed(c);
+    if (t) return t;
+  }
+  return ""; // the schema is the second layer and will name this; never mask it
+};
+
 // --- per-scanner normalizers -------------------------------------------------
 // Each returns { findings, unmapped, surface } -- surface being whatever counts
 // this scanner is the right instrument for. Unknown counts are simply absent;
@@ -154,7 +176,7 @@ const NORMALIZERS = {
           party: "second",
           subject: `${name}@${v.range ?? "*"}`,
           counterInvariant: ci("npm-audit", "known-cve", seen),
-          title: scrubbed(via.title ?? "known advisory"),
+          title: firstText(via.title, "known advisory"),
         });
       }
     }
@@ -175,7 +197,7 @@ const NORMALIZERS = {
             party: "second",
             subject: `${pkg.package?.name ?? "?"}@${pkg.package?.version ?? "?"}`,
             counterInvariant: ci("osv-scanner", "known-cve", seen),
-            title: scrubbed(vuln.summary ?? vuln.id),
+            title: firstText(vuln.summary, vuln.id, "known advisory"),
           });
         }
       }
@@ -193,7 +215,7 @@ const NORMALIZERS = {
         party: "second",
         subject: `${a.package ?? "?"}@${a.version ?? "?"}`,
         counterInvariant: ci("sca-behavioral", a.type, seen),
-        title: scrubbed(a.title ?? a.type),
+        title: firstText(a.title, a.type, "behavioral finding"),
       });
     }
     // Phase 2b: the four behavioral counts. Absent keys stay NOT MEASURED.
@@ -214,7 +236,7 @@ const NORMALIZERS = {
       party: "first",
       subject: `${r.path}:${r.start?.line ?? 0}`,
       counterInvariant: ci("semgrep", "sast", seen),
-      title: scrubbed(r.extra?.message ?? r.check_id),
+      title: firstText(r.extra?.message, r.check_id, "sast finding"),
     }));
     return { findings, unmapped: [...seen], surface: {} };
   },
@@ -229,7 +251,7 @@ const NORMALIZERS = {
       party: "first",
       subject: `${f.File ?? f.file ?? "?"}:${f.StartLine ?? 0}`,
       counterInvariant: ci("gitleaks", "secret-in-history", seen),
-      title: scrubbed(f.Description ?? f.RuleID ?? "secret detected"),
+      title: firstText(f.Description, f.RuleID, "secret detected"),
     }));
     return { findings, unmapped: [...seen], surface: {} };
   },

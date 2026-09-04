@@ -26,6 +26,7 @@ import { generate, toRe2 } from "./gen-gitleaks-config.mjs";
 import { diff } from "./sbom-diff.mjs";
 import { classify, inventory } from "./license-inventory.mjs";
 import { assemble, SCANNER_IDS, CI_MAP } from "./assemble-scan-run.mjs";
+import { validate } from "./lib/json-schema-subset.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const NODE = process.execPath;
@@ -186,7 +187,7 @@ const full = assemble({
     "expected every fixture scanner to read as ran: " + full.scanners.filter((s) => s.status !== "ran").map((s) => `${s.id}=${s.status}`).join(", "));
 
   const counts = Object.fromEntries(full.scanners.map((s) => [s.id, s.findings.length]));
-  const expect = { "npm-audit": 2, "osv-scanner": 2, "sca-behavioral": 8, semgrep: 2, gitleaks: 1, sbom: 0, licenses: 3 };
+  const expect = { "npm-audit": 2, "osv-scanner": 2, "sca-behavioral": 8, semgrep: 2, gitleaks: 2, sbom: 0, licenses: 3 };
   const wrong = Object.entries(expect).filter(([id, n]) => counts[id] !== n).map(([id, n]) => `${id}: got ${counts[id]}, expected ${n}`);
   check("scan-envelope-finding-counts", wrong.length === 0, wrong.join("; "));
 
@@ -209,6 +210,41 @@ const full = assemble({
   check("scan-surface-measured-is-a-number",
     Number.isInteger(full.surface.directDependencies) && full.surface.directDependencies > 0,
     `directDependencies read as ${full.surface.directDependencies} for a tree that HAS a package.json -- null must mean not measured, not "never measurable"`);
+}
+
+// --- the envelope the fixtures produce must satisfy the schema ---------------
+//
+// assemble-scan-run.mjs validates before it writes, and a malformed envelope is
+// the ONE thing in EPIC-03 allowed to fail a job. That gate lived only in the
+// CLI, so nothing here ever ran the fixture envelope past it -- and CI caught a
+// gitleaks finding with an empty title that these tests could not see. The gate
+// now runs against the fixtures too.
+
+{
+  const schema = JSON.parse(readFileSync(join(ROOT, "schemas/scan-run.schema.json"), "utf8"));
+  const errs = validate(full, schema, schema);
+  check("scan-envelope-validates-against-its-schema",
+    errs.length === 0,
+    `the fixture envelope is MALFORMED, so the assembler would exit 1 in CI: ${errs.slice(0, 5).join("; ")}`);
+}
+
+// --- an upstream field that is PRESENT BUT EMPTY ------------------------------
+//
+// gitleaks 8.21.2 ships built-in rules with no Description -- curl-auth-header
+// is one, and it fired on a real commit. `??` falls back on null/undefined and
+// NOT on "", so the empty string flowed straight through to a schema that
+// requires minLength 1. Every normalizer wrote its title the same way, so this
+// pins the property for all of them at once.
+
+{
+  const empties = [];
+  for (const s of full.scanners)
+    for (const f of s.findings)
+      for (const [field, v] of Object.entries({ id: f.id, subject: f.subject, title: f.title }))
+        if (typeof v !== "string" || v.trim() === "") empties.push(`${s.id}: ${field}=${JSON.stringify(v)}`);
+  check("scan-finding-text-is-never-empty (a present-but-empty upstream field)",
+    empties.length === 0,
+    `a finding carries empty text, which the schema rejects: ${empties.join("; ")}`);
 }
 
 // --- rule 2: no secret material crosses into the envelope --------------------
