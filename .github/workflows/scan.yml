@@ -361,7 +361,23 @@ jobs:
             '
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
+      - name: mist index (EPIC-06, non-blocking)
+        # Read-only over the artifacts above. It scores what it can and says so
+        # when it cannot -- today three of five axes have no instrument, so it
+        # prints NOT COMPUTABLE rather than a renormalised number.
+        continue-on-error: true
+        run: |
+          {
+            echo '### Mist Index'
+            echo '```'
+            node tools/mist-index/bin/mist-index.mjs . || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          node tools/mist-index/bin/mist-index.mjs . --json > mist-index.json || true
+
       - uses: actions/upload-artifact@v4
         with:
           name: scan-run
-          path: scan-run.json
+          path: |
+            scan-run.json
+            mist-index.json

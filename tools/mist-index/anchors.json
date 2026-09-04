@@ -1,0 +1,39 @@
+{
+  "$comment": "Published, versioned anchors for the Mist Index. Changing any value here requires bumping anchorsVersion AND re-publishing every historical score under the new anchors, clearly labelled -- silently re-anchoring is the metric equivalent of rewriting history. scripts/test-mist-index.mjs asserts each axis returns exactly these values at these points, so an edit here fails the suite until the tests are updated deliberately.",
+  "anchorsVersion": "v1",
+  "published": "2026-09-04",
+  "weights": { "A1": 0.30, "A2": 0.25, "A3": 0.25, "A4": 0.10, "A5": 0.10 },
+  "axes": {
+    "A1": {
+      "name": "surface",
+      "unit": "distinct name@version",
+      "measure": "distinct name@version in package-lock.json, excluding workspace links",
+      "points": [[0, 0], [50, 25], [250, 50], [900, 75], [2500, 100]]
+    },
+    "A2": {
+      "name": "install-execution",
+      "unit": "packages",
+      "measure": "packages declaring preinstall, install or postinstall",
+      "points": [[0, 0], [1, 20], [10, 50], [50, 80], [150, 100]]
+    },
+    "A3": {
+      "name": "import-time reach",
+      "unit": "packages",
+      "measure": "packages performing network or filesystem access at import",
+      "points": [[0, 0], [1, 30], [5, 60], [20, 85], [60, 100]]
+    },
+    "A4": {
+      "name": "churn",
+      "unit": "packages added+removed per merged PR",
+      "measure": "mean over merged PRs in the trailing 90 days",
+      "points": [[0, 0], [2, 25], [8, 50], [25, 75], [80, 100]]
+    },
+    "A5": {
+      "name": "red-state",
+      "unit": "days between red battery states",
+      "measure": "mean over the trailing 180 days; LOWER is worse, so this axis is inverted",
+      "inverted": true,
+      "points": [[0, 100], [7, 80], [30, 55], [90, 30], [365, 0]]
+    }
+  }
+}

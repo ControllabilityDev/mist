@@ -31,13 +31,32 @@ leaderboard, or make normative claims about specific projects. See Scope rule 5.
 
 | Component | Status |
 |---|---|
-| `docs/MIST_INDEX.md` — definition, formula, and limits | Planned |
-| Axis definitions with measurement procedures | Planned |
-| Normalization & weighting, with the weights justified | Planned |
-| `tools/mist-index/` CLI, near-zero dependency | Planned |
-| Self-scoring in CI; panel published to EPIC-04 | Planned |
-| Calibration set — kernel repos vs Mist | Planned |
-| Falsification section: what would disprove the index | Planned |
+| `docs/MIST_INDEX.md` — definition, formula, and limits | **Complete** — limits and falsification written **first**, per Phase 0c |
+| Axis definitions with measurement procedures | **Complete** — 5 axes, each with a stated procedure |
+| Normalization & weighting, with the weights justified | **Complete** — anchors `v1`, published and versioned |
+| `tools/mist-index/` CLI, near-zero dependency | **Complete** — **zero** runtime dependencies, asserted mechanically |
+| Self-scoring in CI; panel published to EPIC-04 | **Partial** — CI step added to `scan.yml`; the EPIC-04 panel waits on EPIC-04 |
+| Calibration set — kernel repos vs Mist | **Not done** — one scored point is not a calibration; see corrigendum 4 |
+| Falsification section: what would disprove the index | **Complete** — three named disconfirming observations, none yet tested |
+| `scripts/test-mist-index.mjs` | **Complete** — 23 tests |
+
+*All rows landed 2026-09-04. Commit pin owed next session.*
+
+### The headline result: the index cannot be computed here
+
+**Two of five axes have an instrument. `MI` is reported as `null`.**
+
+| Axis | State | Raw | Score | Weight |
+|---|---|---:|---:|---:|
+| `A1` surface | measured | 794 distinct `name@version` | 70.9 | .30 |
+| `A2` install-execution | measured | 6 packages | 36.7 | .25 |
+| `A3` import-time reach | **not-measured** | — | — | .25 |
+| `A4` churn | **insufficient-history** (12 days of 90) | — | — | .10 |
+| `A5` red-state | **unavailable** (no EPIC-04) | — | — | .10 |
+
+45% of the weight is unmeasured. No partial score is published: re-normalising
+the measured axes to fill 100 would produce a number that looks like a Mist Index
+and is not one, and it would be quoted as one.
 
 ---
 
@@ -363,3 +382,109 @@ Exit criteria:
 6. The sensitivity analysis under three alternative weightings is published,
    including the case where it undermines the chosen weights.
 7. The Mist Index panel is live on the EPIC-04 dashboard, charted beside raw A1.
+
+---
+
+## Implementation corrigendum
+
+*Added 2026-09-04. What landed, and the three places this EPIC's plan met
+reality.*
+
+### 1. The headline finding is that the index cannot be computed
+
+Not a shortfall to be closed later — the primary result of the EPIC. Three of
+five axes have **no instrument in this repository**, and each is reported with a
+distinct state rather than collapsed into one:
+
+- `A3` is **`not-measured`**: detecting import-time network reach needs the
+  behavioural SCA that EPIC-03 Phase 2a never wired. Scoring it `0` would assert
+  *"this tree performs no import-time network access"* — something nobody has
+  checked and which is probably false. It is the sharpest case of the general
+  rule and the reason the rule exists.
+- `A4` is **`insufficient-history`**: the instrument works, the window does not.
+  12 days of history against a 90-day requirement.
+- `A5` is **`unavailable`**: the data source does not exist at all.
+
+"We cannot see this", "we could see it but not yet" and "there is nothing to see
+it with" are three different claims. Collapsing them would let a reader assume
+the most flattering one.
+
+**No re-normalisation.** The obvious move is to scale the measured 55% of the
+weight up to 100 and publish that. It is refused in code
+(`composite()` returns `null`) and asserted in `mi-no-partial-score`, because the
+result would look exactly like a Mist Index, would be quoted as one, and would be
+15 points of pure invention.
+
+### 2. `A1` is 794, and the definition is now settled
+
+EPIC-02's corrigendum recorded four defensible counts of the same tree differing
+by 141 packages, and said the Index must pick one. It picks **distinct
+`name@version` from `package-lock.json`, excluding workspace links**.
+
+Two reasons, both in `docs/MIST_INDEX.md`: a package present at two versions is
+two artifacts from two publish events that you trust, not one; and the lockfile
+is committed, so the measure is reproducible by anyone without installing.
+
+Note the consequence — 794 is the **largest** of the four candidates. The
+definition that is most defensible is also the least flattering to Mist, and it
+is the one that gets published.
+
+`A1` needing only the lockfile while `A2` needs an installed tree is a real
+asymmetry. It means the tool scores an uninstalled repository partially, which is
+reported rather than smoothed over.
+
+### 3. The axes live in one file, not five
+
+Design's Key Files asks for `axes/a1.mjs` .. `a5.mjs`. They are in
+`axes/index.mjs` instead. Five modules that each re-export the same interpolation
+against a different table is more surface for no benefit, and this tool of all
+tools should not carry surface it does not need. The property the EPIC actually
+wants — each axis pure, `(raw, anchors) => score`, independently testable against
+its anchor table — holds, and `mi-axis-anchors` tests every anchor point of every
+axis.
+
+### 4. Calibration was not done, and one row is not a table
+
+Phase 4a asks for a calibration table. It is **not** published, because the only
+scored point is Mist itself and a one-row table implies a spread that has not
+been demonstrated.
+
+The kernel repositories named in the framework are Rust; v1 is npm-only. Phase 4b
+allows either a cargo adapter or an explicit statement that the comparison is
+qualitative. **The statement is made; no cross-ecosystem number is fabricated.**
+
+The sensitivity analysis (Phase 4c) is owed for the same reason: it needs a
+calibration set to be sensitive *about*. Until then `docs/MIST_INDEX.md` labels
+the weighting as an assertion rather than a finding.
+
+The two fixture repositories in `fixtures/repos/` are not calibration. They exist
+to prove the index discriminates — identical package counts, different
+install-script counts, different scores — which is the minimum guard against
+falsification criterion 1, not evidence about real projects.
+
+### 5. Two bugs worth recording, both silent
+
+**`git log --reverse --max-count=1` returns the newest commit, not the oldest.**
+Git applies `max-count` before `reverse`. The repository therefore looked 0 days
+old, `A4` reported `insufficient-history` forever, and nothing looked wrong —
+because "insufficient history" was the expected answer. A wrong answer that
+matches your expectation is the hardest kind to see.
+
+**`"test-mist-index.mjs".endsWith("mist-index.mjs")` is `true`.** The CLI's entry
+guard used `endsWith`, so importing the module from its own test suite executed
+the CLI and printed a full report before the tests ran. Now uses the shared
+realpath-comparing `isMain` helper — the same helper written in EPIC-03 after a
+different silent-success bug in the same position.
+
+### Debt this EPIC did not pay
+
+- **Calibration, sensitivity analysis, and the EPIC-04 panel** all wait on other
+  work. Named above rather than left implied.
+- **Publishing `mist-index` to npm** (Phase 5a) is not decided. It would need the
+  `@mist-demo` scope, which EPIC-01 still records as unregistered.
+- **`A4` approximates PR churn with lockfile-touching commits**, because this
+  repository has no merged-PR history. The approximation is printed in the axis
+  detail line rather than hidden behind the axis name.
+- **None of the three falsification criteria has been tested.** The document says
+  so. The strongest test — EPIC-09's `pure` branch scored against `main` — does
+  not exist yet.
