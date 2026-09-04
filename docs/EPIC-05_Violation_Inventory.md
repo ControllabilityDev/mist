@@ -31,13 +31,28 @@ fix any violation. Fixing violations is EPIC-09, on a separate branch.
 
 | Component | Status |
 |---|---|
-| `violations.yaml` — machine-readable source of truth | Planned |
-| `VIOLATIONS.md` — generated human view | Planned |
-| Class taxonomy (four classes → `CI-*` ids) | Planned |
-| `scripts/gen-violations.mjs` generator | Planned |
-| Completeness check (every direct dep classified) | Planned |
-| Evidence linking (SCA findings → violation rows) | Planned |
-| First-party violation entries (app-level, not dep-level) | Planned |
+| ~~`violations.yaml`~~ `violations.json` — machine-readable source of truth | **Complete** — 47 entries; JSON not YAML, see corrigendum 1 |
+| `VIOLATIONS.md` — generated human view | **Complete** — 485 lines, byte-identity enforced |
+| Class taxonomy (four classes → `CI-*` ids) | **Complete** — `docs/ANTI_KERNEL.md`, one home |
+| `scripts/gen-violations.mjs` generator | **Complete** — zero dependencies |
+| Completeness check (every direct dep classified) | **Complete** — `scripts/check-violations.mjs`, 8 assertions, **blocking** |
+| Evidence linking (~~SCA findings~~ → violation rows) | **Complete, redirected** — evidence resolves against the tree, not against `scan-run.json`; see corrigendum 2 |
+| First-party violation entries (app-level, not dep-level) | **Complete** — 9 first-party violations, counted in the summary |
+| `.github/workflows/violations.yml` | **Complete** — Mist's **third** blocking job |
+| `scripts/test-violations.mjs` | **Complete** — 10 tests, every assertion proven able to refuse |
+
+*All rows landed 2026-09-04. Commit pin owed next session.*
+
+**The counts, measured not estimated:**
+
+| Class | Entries | Second-party | First-party |
+|---|---:|---:|---:|
+| hidden-input-channel | 8 | 8 | 0 |
+| unfakeable-seam | 6 | 0 | 6 |
+| uncontrolled-emission | 2 | 2 | 0 |
+| boundary-erosion | 3 | 0 | 3 |
+| none | 28 | 28 | 0 |
+| **total** | **47** | **38** | **9** |
 
 ---
 
@@ -363,3 +378,113 @@ Exit criteria:
    document rather than left implicit.
 6. `violations.yml` runs blocking on PRs, and the blocking/non-blocking asymmetry
    with EPIC-03 is documented in `docs/SCANNERS.md`.
+
+---
+
+## Implementation corrigendum
+
+*Added 2026-09-04. Deltas between `## Design` and what landed.*
+
+### 1. The source of truth is `violations.json`, not `violations.yaml`
+
+Design permits this explicitly — *"a small YAML subset parser, or
+`violations.json` if that proves fiddly — decide and record the choice"* — so
+this is the recording of that choice.
+
+Every entry carries a paragraph of prose. A hand-rolled YAML subset handling
+block scalars, nested lists and quoting is a **silent-misparse** hazard: it does
+not crash, it quietly returns the wrong string. This is the one document in the
+repository that exists to be cited, so the format that cannot be subtly misread
+beat the format that is nicer to type. The human-facing artifact is the
+generated Markdown regardless.
+
+### 2. Evidence resolves against the tree, not against `scan-run.json`
+
+Design has evidence pointing at behavioural-SCA finding ids from EPIC-03.
+**Phase 0b could not be satisfied: EPIC-03 Phase 2a never wired an SCA tool, so
+there are no finding ids to cite.** Scope rule 4 says a violation with no
+evidence is a claim, and claims do not go in the exhibit — so the choice was to
+find another evidence source or write no violations.
+
+`scripts/lib/evidence.mjs` resolves five mechanical forms instead:
+
+| Form | Proves |
+|---|---|
+| `install-script:<pkg>` | `<pkg>/package.json` declares pre/install/postinstall |
+| `import-effect:<pkg>:<file>:<n>` | a module-scope effect at a named line of the package's own source |
+| `pkg-file:<pkg>:<file>` | the package ships a file that does something (a telemetry poster) |
+| `path:<file>:<n>` | a first-party anchor |
+| `fanout:<pkg>:<n>` | the package declares at least *n* direct dependencies |
+
+This is a **stronger** source than a finding id, not a weaker one. An install
+hook is either declared in a `package.json` on disk or it is not, and anyone can
+re-run the check with `node`. A finding id is a tool's opinion, reproducible
+only by re-running that tool at that version. All 27 evidence items resolve; the
+gate fails if any stops resolving, which is how the inventory tracks reality
+rather than a snapshot.
+
+### 3. The gate has eight assertions, not six
+
+Two beyond Design. `viol-schema-valid` runs first so a malformed file fails
+legibly. `viol-no-subject-is-both-none-and-a-violation` was added after the first
+draft classified `@prisma/client` as both — an inventory that says a package is
+simultaneously inert and in breach is not an exhibit, it is a contradiction.
+
+### 4. `uncontrolled-emission` found less than expected, and one thing nobody predicted
+
+Only two entries: `next` ships a telemetry poster that reports to
+`https://telemetry.nextjs.org/api/v1/record`, and `prisma`'s CLI contacts
+`checkpoint.prisma.io`. Both on by default, both opt-out.
+
+The unpredicted one is filed under `hidden-input-channel` and is worth reading
+in full at **V-009**: running `next dev` **writes files into the repository** —
+`apps/web/AGENTS.md` and `apps/web/CLAUDE.md`, containing instructions addressed
+to AI coding agents. Nobody asked for them. They appeared during EPIC-02 and were
+committed in `8a4b444` by a `git add -A` that nobody read line by line.
+
+It is a hidden input channel of an unusually direct kind: not a value flowing
+into the program, but instructions flowing into the humans and agents who write
+it, placed there by a dependency, on its own initiative, at dev-server startup.
+The file even argues its own case for being committed. Whether the advice is
+good is beside the point — a package that edits your source tree to tell your
+tools what to think is a channel the project never opened and cannot see from
+`package.json`.
+
+### 5. The honest numbers, including the ones that undercut the thesis
+
+- **Only 6 of 736 packages run install scripts.** Mist expected more. Reported
+  as measured; the class-level entry names all six rather than rounding to a
+  scarier aggregate.
+- **`boundary-erosion` has zero second-party entries.** The format leakage in
+  this application is entirely first-party — our code passes the provider's wire
+  shape around. Charging `axios` for that would move the blame to the wrong
+  place, so `axios` is `class: none` with the seam recorded against
+  `CurrentConditions.tsx:12` instead.
+- **28 of 47 entries are `none`.** More than half the inventory says "this
+  dependency exhibits nothing". That is the honest result and it strengthens the
+  exhibit: an inventory where everything is a violation is a document nobody
+  believes.
+- **9 first-party violations against 10 second-party ones.** Mist's claim is
+  that its defects are second-party and emergent. At this size the two are
+  nearly even, and saying so is the only way the claim stays falsifiable. The
+  ratio should be re-read when the tree grows.
+
+### 6. The committed API key is deliberately not in the inventory
+
+K1 is a security finding, not a kernel counter-invariant. Stretching the
+four-class taxonomy to hold it would weaken the taxonomy for one entry's sake.
+Its lifecycle lives in `docs/KEY_ROTATION.md`, which now records it as revoked
+and verified dead at `2026-09-04T00:52:20Z`.
+
+### Debt this EPIC did not pay
+
+- **Transitive coverage is thin.** One class-level entry, for install scripts,
+  because that is the only transitive behaviour that could be evidenced
+  mechanically. Import-time network and maintainer churn across 736 packages
+  still need EPIC-03 Phase 2a's SCA tool. The document states this limit rather
+  than implying coverage it does not have.
+- **`fanout` evidence is defined but unused.** No entry needed it once `express`
+  was honestly classified `none`. Left in place because EPIC-06 will want it.
+- **The initial `violations.json` was composed by a throwaway script.** From
+  here it is hand-edited, which is the design. Nothing regenerates it, so a
+  future bulk change has no tooling.

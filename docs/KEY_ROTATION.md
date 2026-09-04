@@ -67,20 +67,22 @@ pasted the key where it worked, and moved on.
 
 ## Rotation record
 
-**K1 is provisioned, committed, and LIVE. It must be revoked.**
+**K1 is provisioned, committed, and REVOKED.** It remains in history at `3892074`
+and always will (step 6). That is safe because step 4 is done, not because the
+value is hidden.
 
 | Step | Owner | State |
 |---|---|---|
 | 1. Provision K1 | EPIC-02 Phase 2 | **Done** — 2026-09-03, OpenWeatherMap free tier |
-| 2. Commit K1 plausibly | EPIC-02 Phase 2 | **Done** — `apps/web/next.config.js`, `env` block |
+| 2. Commit K1 plausibly | EPIC-02 Phase 2 | **Done** — commit `3892074`, `apps/web/next.config.js` env block |
 | 3. Ship the feature | EPIC-02 Phase 2 | **Done locally** — dashboard renders live weather; deploy still blocked |
-| 4. Revoke K1 | EPIC-02 closing Work Item | ⚠️ **OWED — this is the open one** |
+| 4. Revoke K1 | EPIC-02 closing Work Item | **Done** — 2026-09-04T00:52:20Z, verified by the provider returning 401 |
 | 5. Provision K2 (env var only) | EPIC-02 Phase 2 | **Owed** — after step 4, and **step 5 is not currently safe**, see below |
 | 6. Never rewrite history | standing, forever | **In force** |
 
 | Key | Provisioned | Committed at | Revoked at | Revocation timestamp |
 |---|---|---|---|---|
-| K1 | 2026-09-03 | `apps/web/next.config.js` env block | *not yet* | *unset* |
+| K1 | 2026-09-03 | `3892074` — `apps/web/next.config.js` env block | 2026-09-04 | `2026-09-04T00:52:20Z` |
 | K2 | *unset* | never — env var only | — | — |
 
 ### How K1 arrived, so the medianness claim can be checked
@@ -98,6 +100,27 @@ working, and the session moved on.
 That is exactly how keys reach public history: not by carelessness about
 secrets, but by carefulness about making the thing work. Nobody in that sequence
 was thinking about `gitleaks`.
+
+**The commit is `3892074`.** Its subject line describes the step 5 hazard rather
+than K1, because the two changes landed together. Pinned here so the commit is
+citable regardless of what its message says — history is not rewritten to tidy
+this up (step 6), and a wrong subject line is not a reason to break that rule.
+
+### How the revocation was confirmed
+
+Not by being told. The contributor reported the key revoked while the provider
+was still returning HTTP 200 on all three endpoints, so the timestamp was **not**
+written at that point — a revocation record that says something untrue makes the
+whole document uncitable, which is the same rule the install ledger runs on
+(`docs/CONSTRUCTION.md` rule 2).
+
+A watcher polled the provider until it returned 401, which took about 16 minutes
+of propagation after the deletion. The timestamp above is the moment the
+provider actually started refusing the key, re-verified afterwards against
+`data/2.5/weather`, `data/2.5/forecast` and `geo/1.0/direct`.
+
+The lag is the interesting part: for roughly a quarter of an hour after somebody
+believed they had revoked a public credential, that credential still worked.
 
 **Verified true positive.** Scanning the tracked tree with
 `schemas/secret-patterns.json` — the same ruleset `scripts/gen-gitleaks-config.mjs`
@@ -159,10 +182,9 @@ with K1 live.
 
 ## If K1 leaks before step 4
 
-**K1 exists and is live as of 2026-09-03.** It is committed at
-`apps/web/next.config.js` and has not been revoked. That is not a leak — it is
-step 2 working as designed — but it means the window this section describes is
-open right now. Revoke immediately,
+**The window is closed.** K1 was live and public between commit `3892074` and
+2026-09-04T00:52:20Z. It is now revoked and verified dead. If a future key ends
+up in the same position: revoke immediately,
 record the timestamp here, and **do not** rewrite history. Report per
 `SECURITY.md` — say *"a live credential is exposed at `<file>:<line>`"* and do
 not paste the value. The value being public is the expected end state; it being

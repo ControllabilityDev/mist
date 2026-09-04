@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ControllabilityDev/mist/schemas/violations.schema.json",
+  "title": "Mist violation inventory",
+  "$comment": "The machine-readable source of truth for VIOLATIONS.md. The Markdown is GENERATED and never hand-edited; scripts/check-violations.mjs fails on a byte difference. Four classes, taken verbatim from docs/mist-concept-evaluation.md:62, joined to the CI-1..CI-6 ids in docs/ANTI_KERNEL.md. `none` is a first-class class rather than an omission: if a dependency can simply be absent, the completeness check has nothing to assert and 'maintained' becomes unverifiable.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "entries"],
+  "properties": {
+    "schemaVersion": { "const": "1" },
+    "generatedNote": { "type": "string" },
+    "entries": { "type": "array", "items": { "$ref": "#/$defs/entry" } }
+  },
+  "$defs": {
+    "entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "subject", "party", "class", "ci", "evidence", "note"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^V-[0-9]{3}$" },
+        "subject": {
+          "type": "string",
+          "minLength": 1,
+          "description": "A package name, or a first-party path:line."
+        },
+        "party": {
+          "enum": ["first", "second"],
+          "$comment": "The claim Mist makes is that its defects are second-party and emergent while Juice Shop's are first-party and curated (docs/mist-concept-evaluation.md:68). That claim is only credible if the first-party ones are counted honestly too."
+        },
+        "class": {
+          "enum": ["hidden-input-channel", "unfakeable-seam", "uncontrolled-emission", "boundary-erosion", "none"],
+          "$comment": "Verbatim from docs/mist-concept-evaluation.md:62. Do not invent a fifth."
+        },
+        "ci": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^CI-[1-6]$" }
+        },
+        "evidence": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "$comment": "Every item must RESOLVE against the tree (scripts/lib/evidence.mjs). A violation with unresolvable evidence is a claim, and claims do not go in the exhibit (EPIC-05 Scope rule 4)."
+        },
+        "note": { "type": "string", "minLength": 20 },
+        "attribution": {
+          "type": ["string", "null"],
+          "description": "For a transitive behaviour attributed to a direct dependency: which package actually declares it."
+        }
+      }
+    }
+  }
+}

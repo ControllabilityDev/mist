@@ -19,11 +19,27 @@ configure it", but "this class of tool cannot answer this class of question."
 ## The asymmetry, once more
 
 Every job in `.github/workflows/scan.yml` is `continue-on-error: true`. A red
-scan is data, not a defect (`docs/ROADMAP.md:48`). The blocking jobs in this
-repository are `containment.yml` (EPIC-01) and `ledger.yml` (EPIC-08), both of
-which are about whether the experiment is being run **truthfully**. Nothing
-blocks on whether the tree is clean, because the tree is not supposed to be
-clean.
+scan is data, not a defect (`docs/ROADMAP.md:48`). Nothing blocks on whether the
+tree is clean, because the tree is not supposed to be clean.
+
+There are **three blocking jobs**, and all three are about whether the
+experiment is being run truthfully rather than whether it is exposed:
+
+| Blocking job | EPIC | What it refuses |
+|---|---|---|
+| `containment.yml` | EPIC-01 | a breach of the wall around the experiment |
+| `ledger.yml` | EPIC-08 | an install with no contemporaneous record |
+| `violations.yml` | EPIC-05 | an inventory that no longer matches the tree |
+
+The third is the one worth explaining. A scanner finding measures the
+ecosystem's decay; a drifted inventory is Mist failing to do its own
+documentation job. An inventory that no longer matches the tree is worse than no
+inventory, because people cite it. `docs/mist-concept-evaluation.md:62` calls for
+a *maintained* `VIOLATIONS.md`, and "maintained" is only true if something
+enforces it.
+
+**Zero blocking scanners, three blocking honesty gates.** That asymmetry is a
+claim the project makes on purpose.
 
 The one job in `scan.yml` that is not `continue-on-error` is `assemble`. That is
 the rule applied to the instrument rather than an exception to it: a malformed

@@ -81,7 +81,7 @@ being.
 | [`deploy/isolation.md`](deploy/isolation.md) | The containment boundary around the deployment |
 | [`docs/ROADMAP.md`](docs/ROADMAP.md) | EPIC map, build order, and the fixed toolchain decisions |
 | [`docs/mist-concept-evaluation.md`](docs/mist-concept-evaluation.md) | The original concept evaluation that argues Mist is worth building |
-| `VIOLATIONS.md` | Each dependency mapped to the invariant it breaks — **not yet written** (EPIC-05) |
+| [`VIOLATIONS.md`](VIOLATIONS.md) | Each dependency and first-party seam mapped to the counter-invariant it exhibits, with evidence that resolves against the tree. Generated from `violations.json`; a hand edit fails CI. |
 | The public telemetry dashboard | The permanent scan artifact — **not yet built** (EPIC-04) |
 
 ## Current state

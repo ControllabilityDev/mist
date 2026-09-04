@@ -1,0 +1,55 @@
+# The violation-inventory gate -- THE THIRD BLOCKING JOB IN MIST.
+#
+# Why this blocks and the EPIC-03 scan jobs do not:
+#
+#   A scanner finding measures the ecosystem's decay. Gating merge on it would
+#   stop Mist recording the very thing it exists to record, and would quietly
+#   pressure contributors into adopting mitigations (CONTRIBUTING.md standing
+#   rule 4).
+#
+#   A drifted inventory is not a finding about the ecosystem. It is Mist failing
+#   to do its own documentation job, and it silently misrepresents the specimen
+#   -- an inventory that no longer matches the tree is worse than no inventory,
+#   because people cite it. The word "maintained" in
+#   docs/mist-concept-evaluation.md:62 is the whole difficulty of EPIC-05, and it
+#   is only true if something enforces it.
+#
+#   So Mist blocks on HONESTY and never on exposure. Three blocking jobs:
+#   containment.yml (EPIC-01), ledger.yml (EPIC-08), and this one. Zero blocking
+#   scanners. That asymmetry is a claim the project makes on purpose.
+#
+# Owned by EPIC-05. See VIOLATIONS.md, violations.json and docs/SCANNERS.md.
+
+name: violations
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  violations:
+    name: violation inventory gate (blocking)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: install the dependency tree
+        # The evidence resolvers read install hooks and source lines out of
+        # node_modules, so the tree has to exist. Install scripts stay ENABLED:
+        # --ignore-scripts here would hide the exact behaviour the inventory
+        # cites as evidence, and the gate would pass by blinding itself.
+        run: npm ci --no-audit --no-fund
+
+      - name: check-violations
+        run: node scripts/check-violations.mjs
+
+      - name: test-violations
+        run: node scripts/test-violations.mjs

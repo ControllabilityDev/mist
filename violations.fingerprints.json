@@ -1,0 +1,23 @@
+{
+  "install-script:prisma": "cf9f9214",
+  "install-script:@prisma/engines": "2c59f627",
+  "install-script:better-sqlite3": "74676e9e",
+  "install-script:esbuild": "912d4d8f",
+  "import-effect:esbuild:install.js:149": "d85db125",
+  "install-script:@parcel/watcher": "85d2f36f",
+  "install-script:unrs-resolver": "8863e845",
+  "import-effect:moment-timezone:index.js:2": "67d31a06",
+  "pkg-file:next:dist/telemetry/post-telemetry-payload.js": "32015457",
+  "pkg-file:prisma:build/cli.js": "c2349914",
+  "pkg-file:next:dist/server/lib/generate-agent-files.js": "61a74b9b",
+  "path:apps/web/AGENTS.md:1": "027f79e1",
+  "path:apps/web/app/dashboard/CurrentConditions.tsx:12": "33daeae2",
+  "path:apps/api/src/db.ts:18": "69842020",
+  "path:apps/api/src/server.ts:14": "7a379f34",
+  "path:apps/web/components/LocationSearch.tsx:27": "0418772d",
+  "path:apps/web/__tests__/CurrentConditions.test.tsx:5": "615c7c38",
+  "path:apps/api/__tests__/preferences.test.ts:4": "033c0a63",
+  "path:apps/web/app/dashboard/CurrentConditions.tsx:36": "1d23a5cf",
+  "path:apps/web/app/dashboard/CurrentConditions.tsx:40": "f024d838",
+  "path:apps/web/app/dashboard/Forecast.tsx:24": "19e87590"
+}

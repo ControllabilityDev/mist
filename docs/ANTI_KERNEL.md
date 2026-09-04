@@ -152,3 +152,31 @@ running (`docs/mist-concept-evaluation.md:74`).
 It does not build the application (EPIC-02), wire a scanner (EPIC-03), publish a
 dashboard (EPIC-04), or file a single violation (EPIC-05). It states the thesis
 and fixes the ids. The evidence is owned elsewhere.
+
+---
+
+## Violation classes (EPIC-05)
+
+`docs/mist-concept-evaluation.md:62` names four families of violation. They are
+the vocabulary `VIOLATIONS.md` is written in, and this table is their one home —
+`violations.json` uses these exact names and `schemas/violations.schema.json`
+enforces the enum. **Do not invent a fifth.**
+
+| Class | Meaning | Primary counter-invariant |
+|---|---|---|
+| `hidden-input-channel` | install scripts, env-switched behaviour, import-time network, semver drift | `CI-1` |
+| `unfakeable-seam` | live-API coupling with no port; global client imports | `CI-6` |
+| `uncontrolled-emission` | libraries that log, telemeter, or phone home on their own initiative | `CI-2` |
+| `boundary-erosion` | format and transport types leaking through every layer | `CI-3` |
+| `none` | no counter-invariant exhibited; a written justification is required | — |
+
+`none` is a **class**, not an omission. If a dependency could simply be missing
+from the inventory, the completeness check would have nothing to assert and
+"maintained" would be unverifiable. Requiring an explicit `none` also makes the
+honest cases visible: some median dependencies really are inert, and saying so
+strengthens the exhibit rather than weakening it.
+
+An entry may carry more than one `ci` id, and a subject may appear under more
+than one class — `prisma` exhibits both `hidden-input-channel` and
+`uncontrolled-emission`. A subject may **not** be both `none` and a violation;
+`scripts/test-violations.mjs` asserts that.
