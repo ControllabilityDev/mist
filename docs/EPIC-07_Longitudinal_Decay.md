@@ -28,14 +28,22 @@ the experiment has.
 
 | Component | Status |
 |---|---|
-| Frozen release tag `v1.0.0` (owned by EPIC-02 Phase 8b) | Planned |
-| Tarball vault — every resolved tarball archived | Planned |
-| Reproducible offline install from the vault | Planned |
-| Monthly scheduled rescan workflow | Planned |
-| Decay series in the telemetry record | Planned |
-| Decay panel on the dashboard (EPIC-04 slot) | Planned |
-| `docs/DECAY.md` — protocol and its integrity rules | Planned |
-| Unpublish/yank handling | Planned |
+| Frozen release tag `v1.0.0` | **Not tagged** — and not needed: the freeze is a lockfile hash, see corrigendum 1 |
+| Frozen lockfile + manifest | **Complete** — `decay/v1.0.0/`, 826 packages, every one hashed and **sized by measurement** |
+| Tarball vault — every resolved tarball archived | **Tooling complete, vault not built** — 635.5 MiB; proven end-to-end on a 4-package sample |
+| Reproducible offline install from the vault | **Complete and proven** — `npm ci --offline` against a dead registry |
+| Monthly scheduled rescan workflow | **Complete** — `.github/workflows/decay.yml`, dual-mode, gap-writing |
+| Decay series in the telemetry record | **Schema and reader complete**; no records yet |
+| Decay panel on the dashboard (EPIC-04 slot) | **Complete** — renders both series and breaks the line at gaps |
+| `docs/DECAY.md` — protocol and its integrity rules | **Complete** |
+| Unpublish/yank handling | **Complete by construction** — the vault is content-addressed; the registry is never consulted at rescan time |
+| `scripts/check-decay.mjs` + `test-decay.mjs` | **Complete** — 5 assertions, 17 tests |
+
+*All rows landed 2026-09-04. Commit pin owed next session.*
+
+**Status rows stay unflipped until the third successful monthly rescan** (Phase
+6a). Two points are not a curve, and this table must not claim a working
+longitudinal experiment before one exists. **Zero rescans have run.**
 
 ---
 
@@ -348,3 +356,131 @@ Exit criteria:
 6. `docs/DECAY.md` states the never-update rule, the confound isolation, the gap
    policy, the malicious-package procedure, and the stopping condition.
 7. The frozen tree is scanned but **not deployed** anywhere.
+
+---
+
+## Implementation corrigendum
+
+*Added 2026-09-04. What landed, and where the Design's estimates met measurement.*
+
+### 1. The freeze is a lockfile hash, not a git tag
+
+Phase 0a requires the `v1.0.0` tag. **It does not exist** — EPIC-02 Phase 8b was
+blocked because the agent may not run state-changing git commands in this
+repository.
+
+Rather than stall, the freeze was redefined around what actually matters: the
+**resolution set**. `manifest.json` records `lockfileSha256`, and
+`decay-never-updates` compares against that. Which commit carries a `v1.0.0` tag
+is a naming question, and tying a multi-year experiment to a mutable git ref
+would have been fragile anyway.
+
+The tag is still worth creating, and `decay/v1.0.0/lockfile.json` is byte-identical
+to `package-lock.json` as committed at `8a4b444`, so tagging any commit from
+there forward is consistent.
+
+### 2. 635.5 MiB, measured — roughly double the Design's estimate
+
+Design guessed *"roughly 1,700 tarballs … on the order of a few hundred
+megabytes"*. Phase 1d says measure, not estimate. Measured, by registry range
+request, with zero failures:
+
+| | |
+|---|---:|
+| tarballs | **826** |
+| total | **635.5 MiB** |
+| mean | 788 KiB |
+
+The package count is half the guess and the byte count is double it, which is a
+useful reminder that package counts and bytes are not the same measurement — the
+same confusion EPIC-06 had to settle for `A1`.
+
+**What dominates is worth its own line.** 89 of the 826 packages are
+platform-specific binaries. Six Next.js SWC builds account for roughly 190 MiB
+between them, and five are for platforms this application will never run on. A
+third of the vault is compiled artifacts for other people's computers.
+
+`HEAD` requests were useless here — the npm CDN returns `200` with no
+`content-length`. Sizes come from `Range: bytes=0-0` and the `content-range`
+header.
+
+### 3. Storage: a release asset, not Git LFS (Phase 1d decided and recorded)
+
+`git-lfs` is installed, so LFS was a real option. Rejected: 635.5 MiB is about
+two thirds of GitHub's free 1 GiB LFS quota, consumed on day one, and re-fetched
+by every LFS-enabled clone and CI run. A release asset is fetched once a month by
+the decay job and costs everyone else nothing.
+
+`decay/*/vault/` is gitignored. `check-decay.mjs` reports the vault as `skip`
+rather than a failure when it is absent, because absent-and-rebuildable is the
+normal state.
+
+### 4. The machinery is proven, on a sample rather than in full
+
+`scripts/vault.mjs` was exercised end to end against a four-package freeze
+(`lodash`, `dotenv`, `moment`, `methods`):
+
+- **build** downloaded and verified 4/4 tarballs against their lockfile hashes;
+- **check** confirmed all present and matching;
+- **restore** reconstituted them with `npm_config_registry` pointed at
+  `http://127.0.0.1:1/` — a dead port — and `npm ci --offline` succeeded with the
+  packages genuinely on disk;
+- appending one byte to a vault tarball made **check** report `1 corrupt of 4`
+  with the hash mismatch named.
+
+The full 635.5 MiB build has **not** been run. It is a one-time network-heavy
+operation that produces an artifact which cannot be committed, so it is a
+documented command rather than something done unasked.
+
+### 5. The dual-scan split, and why it is the most important thing here
+
+Every month runs the battery twice: `pinned` (scanner versions frozen at the
+freeze) and `current` (latest). Without that, a rising curve could be disclosure
+*or* better tooling, and the headline claim — *"a static tree accumulates
+vulnerabilities purely through disclosure"* — would be unsupported by its own
+data.
+
+`decay-dual-scan-recorded` fails any month with one mode and no gap record. The
+test proves it by building exactly that fixture.
+
+One pin is already missing: the CycloneDX SBOM tool was not version-pinned at
+freeze time. `scanners.pinned.json` records that as a known gap rather than
+implying a pin that does not exist.
+
+### 6. Gaps are drawn as gaps
+
+Three assertions defend this, because it is the easiest lie available to a chart:
+
+- a gap record **with no stated reason** fails;
+- any record carrying `interpolated: true` fails;
+- the rendered panel breaks the line at a gap and prints
+  `▨ N month(s) with no data — not interpolated` under the axis.
+
+A month that could not run is a break in the line, not a smooth curve through it.
+
+### 7. The vault requires the discipline the specimen lacks
+
+Content-addressed, hash-verified before storage, hermetic, reproducible offline.
+It is the one directory in this repository that behaves like a controlled system,
+and it has to be — otherwise the measurement would be at the mercy of the same
+ecosystem being measured.
+
+`docs/DECAY.md` states this in a paragraph rather than leaving a reader to notice
+it. It is the thesis arriving uninvited.
+
+### Debt this EPIC did not pay
+
+- **No rescan has run**, so there is no series, no curve, and no `A5` for
+  EPIC-06. Status rows stay unflipped until the third month (Phase 6a).
+- **The full vault is not built or uploaded.** It needs one operator run and a
+  release to attach it to.
+- **The decay workflow has never executed.** It is written against EPIC-03's
+  scan-step machinery and reviewed, not observed.
+- **`decay.yml` invokes the scanners directly rather than through a reusable
+  workflow**, which EPIC-07's Reuse block asks for. Two batteries that could
+  drift is a real risk and it is recorded here rather than solved; converting
+  `scan.yml` to `workflow_call` is the fix.
+- **Observation 001 suggests the monthly cadence is too slow.** A tree that
+  gained three advisories in one day while sitting still will not be well
+  characterised by twelve samples a year. The cron is monthly as specified; the
+  evidence for changing it is already on file.

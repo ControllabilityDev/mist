@@ -60,7 +60,7 @@ This follows the `pkcore` modern convention, not the `cardpack.rs` adaptation.
 | [EPIC-04](EPIC-04_Public_Telemetry_Dashboard.md) | Public Telemetry Dashboard (DASH) | The permanent public artifact; the book's figure | Built, unpublished — needs GitHub Pages enabled by an admin |
 | [EPIC-05](EPIC-05_Violation_Inventory.md) | Violation Inventory (VIOL) | `VIOLATIONS.md` — each dep mapped to the invariant it breaks | Landed — 47 entries, 19 evidenced violations, blocking gate |
 | [EPIC-06](EPIC-06_The_Mist_Index.md) | The Mist Index (MI) | Scan spend as a quantitative proxy for surrendered controllability | Built — and reports NOT COMPUTABLE: 3 of 5 axes have no instrument |
-| [EPIC-07](EPIC-07_Longitudinal_Decay.md) | Longitudinal Decay (DECAY) | A frozen tree rescanned monthly; telemetry of entropy | Planned |
+| [EPIC-07](EPIC-07_Longitudinal_Decay.md) | Longitudinal Decay (DECAY) | A frozen tree rescanned monthly; telemetry of entropy | Frozen — 826 packages, 635.5 MiB vaulted. Zero rescans; Status stays unflipped until month 3 |
 | [EPIC-08](EPIC-08_Agentic_Construction_Log.md) | Agentic Construction Log (LOG) | Primary-source evidence for "add a package for that" | Capturing — 35 install records, 11 corrections from session 001 |
 | [EPIC-09](EPIC-09_The_Paired_Refactor.md) | The Paired Refactor (PURE) | The same domain rebuilt kernel-first; before/after | 🔒 Gated |
 

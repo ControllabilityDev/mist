@@ -153,3 +153,9 @@ scan-run.json
 dev.db
 prisma/dev.db
 *.db-journal
+
+# EPIC-07: the tarball vault. 635.5 MiB, measured. Distributed as a GitHub
+# release asset rather than Git LFS -- LFS would eat two thirds of the free
+# quota on day one and be re-fetched by every clone. Rebuild it with
+# `node scripts/vault.mjs build decay/v1.0.0`; verify with `check`.
+decay/*/vault/

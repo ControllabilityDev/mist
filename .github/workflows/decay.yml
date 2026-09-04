@@ -1,0 +1,143 @@
+# The longitudinal decay experiment (EPIC-07). NON-BLOCKING.
+#
+# Rescans a FROZEN tree every month, unchanged. The code does not change, the
+# lockfile does not change, the tree does not change. Only what the world knows
+# about it changes -- so every new finding is attributable to disclosure alone.
+#
+# THE TREE IS NEVER UPDATED. Not for a critical CVE, not for a compromised
+# package. Patching it destroys the only variable the experiment has. It is
+# scanned, never deployed.
+#
+# TWO RUNS PER MONTH, and this is the most important thing in the file:
+#
+#   pinned  -- scanner versions frozen at the freeze (decay/v1.0.0/scanners.pinned.json)
+#              This is the PURE DISCLOSURE SIGNAL: what did the world learn?
+#   current -- latest scanner versions
+#              disclosure PLUS detection capability
+#
+# Without the split, a rising curve could be either cause and the headline claim
+# is unsupported. Their divergence is itself the interesting measure: how much of
+# what we now know we could have known, had the tools been better.
+#
+# A MONTH THAT FAILS WRITES A GAP RECORD. A gapless chart that is not gapless
+# would be a lie of exactly the kind this project is about.
+#
+# Owned by EPIC-07. See docs/DECAY.md.
+
+name: decay
+
+on:
+  schedule:
+    # 03:17 on the 1st. Not on the hour: every scheduled workflow on GitHub fires
+    # on the hour and the queue is worst there.
+    - cron: "17 3 1 * *"
+  workflow_dispatch:
+    inputs:
+      freeze:
+        description: "Freeze directory to rescan"
+        default: "decay/v1.0.0"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: decay-${{ github.event.inputs.freeze || 'decay/v1.0.0' }}
+  cancel-in-progress: false
+
+jobs:
+  rescan:
+    name: rescan the frozen tree (non-blocking)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [pinned, current]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: freeze directory
+        id: freeze
+        run: echo "dir=${{ github.event.inputs.freeze || 'decay/v1.0.0' }}" >> "$GITHUB_OUTPUT"
+
+      - name: fetch the vault
+        id: vault
+        continue-on-error: true
+        # The vault is 635.5 MiB and lives as a release asset, not in git or LFS
+        # (decay/v1.0.0/README.md records the decision and the measured size).
+        run: |
+          gh release download "v1.0.0" --pattern 'vault-*.tar' --dir /tmp/vault || exit 1
+          mkdir -p "${{ steps.freeze.outputs.dir }}/vault"
+          tar -xf /tmp/vault/vault-*.tar -C "${{ steps.freeze.outputs.dir }}/vault"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: verify the vault against the frozen lockfile
+        if: steps.vault.outcome == 'success'
+        run: node scripts/vault.mjs check "${{ steps.freeze.outputs.dir }}"
+
+      - name: reconstitute offline
+        id: restore
+        if: steps.vault.outcome == 'success'
+        continue-on-error: true
+        # npm is pointed at a dead registry. A run that quietly reached the
+        # network would succeed and silently invalidate every later data point.
+        run: node scripts/vault.mjs restore "${{ steps.freeze.outputs.dir }}" --into /tmp/frozen
+
+      - name: record a GAP if the tree could not be reconstituted
+        if: steps.vault.outcome != 'success' || steps.restore.outcome != 'success'
+        run: |
+          mkdir -p out
+          node -e '
+            const fs = require("fs");
+            fs.writeFileSync("out/record.json", JSON.stringify({
+              schemaVersion: "1",
+              startedAt: new Date().toISOString().replace(/\.\d+Z$/, "Z"),
+              freeze: process.env.FREEZE,
+              scannerMode: process.env.MODE,
+              status: "gap",
+              reason: process.env.REASON,
+            }, null, 2) + "\n");
+          '
+        env:
+          FREEZE: ${{ steps.freeze.outputs.dir }}
+          MODE: ${{ matrix.mode }}
+          REASON: "the vault could not be fetched or the tree could not be reconstituted offline"
+
+      - name: run the battery
+        if: steps.restore.outcome == 'success'
+        # Reuses EPIC-03's scanners against the reconstituted tree. `pinned` uses
+        # the versions in scanners.pinned.json; `current` uses latest. A pinned
+        # scanner that no longer executes is recorded as a PER-SCANNER gap and
+        # its series is annotated on the chart -- never interpolated.
+        run: |
+          mkdir -p build/raw out
+          MIST_TOOL_VERSION="$(npm --version)" \
+            bash scripts/scan-step.sh npm-audit build/raw -- npm audit --json --audit-level=none --prefix /tmp/frozen || true
+          MIST_TOOL_VERSION="sca-static" \
+            bash scripts/scan-step.sh sca-behavioral build/raw -- node scripts/sca-static.mjs --root /tmp/frozen || true
+          node scripts/assemble-scan-run.mjs --raw build/raw --root /tmp/frozen --out out/envelope.json
+          node -e '
+            const fs = require("fs");
+            const env = JSON.parse(fs.readFileSync("out/envelope.json", "utf8"));
+            env.freeze = process.env.FREEZE;
+            env.scannerMode = process.env.MODE;
+            env.status = "ran";
+            fs.writeFileSync("out/record.json", JSON.stringify(env, null, 2) + "\n");
+          '
+        env:
+          FREEZE: ${{ steps.freeze.outputs.dir }}
+          MODE: ${{ matrix.mode }}
+
+      - name: check the record
+        run: node scripts/check-decay.mjs --freeze "${{ steps.freeze.outputs.dir }}"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: decay-${{ matrix.mode }}
+          path: out/record.json

@@ -22,7 +22,7 @@
  *   node site/build.mjs --telemetry ./fixtures/telemetry --out /tmp/dash
  */
 
-import { readFileSync, writeFileSync, mkdirSync, existsSync, copyFileSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, existsSync, copyFileSync, readdirSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve, join } from "node:path";
 
@@ -43,7 +43,18 @@ export function loadRecord(telemetryDir) {
     entry,
     envelope: JSON.parse(readFileSync(join(telemetryDir, entry.path), "utf8")),
   }));
-  return { index, runs };
+  // A decay series, if the record has one. Optional: EPIC-07 may not have run.
+  const decayDir = join(telemetryDir, "decay");
+  let decay = [];
+  if (existsSync(decayDir)) {
+    for (const tag of readdirSync(decayDir)) {
+      const d = join(decayDir, tag);
+      if (!statSync(d).isDirectory()) continue;
+      for (const f of readdirSync(d).filter((x) => x.endsWith(".json")).sort())
+        decay.push({ tag, file: f, record: JSON.parse(readFileSync(join(d, f), "utf8")) });
+    }
+  }
+  return { index, runs, decay };
 }
 
 /** One run's headline facts. */
@@ -70,7 +81,11 @@ function digest(envelope) {
 
 /** An inline SVG line chart plus its <table> fallback. */
 function chart(title, series, { height = 150, width = 640 } = {}) {
-  const points = series.points.filter((p) => p.y !== null && p.y !== undefined);
+  // Null points are GAPS. They are dropped from the polyline (so the line
+  // breaks) and counted, never interpolated across.
+  const all = series.points;
+  const points = all.filter((p) => p.y !== null && p.y !== undefined);
+  const gapCount = all.length - points.length;
   const pad = 28;
   const ys = points.map((p) => p.y);
   const max = Math.max(1, ...ys), min = Math.min(0, ...ys);
@@ -92,6 +107,7 @@ function chart(title, series, { height = 150, width = 640 } = {}) {
     <text class="tick" x="${pad}" y="${pad - 10}">${num(max)}</text>
     <text class="tick" x="${pad}" y="${height - pad + 16}">${esc(points[0]?.label ?? "")}</text>
     <text class="tick end" x="${width - pad}" y="${height - pad + 16}">${esc(points[points.length - 1]?.label ?? "")}</text>
+    ${gapCount ? `<text class="tick gap" x="${width / 2}" y="${height - 4}" text-anchor="middle">▨ ${gapCount} month(s) with no data — not interpolated</text>` : ""}
   </svg>
   <details class="fallback-wrap">
     <summary>the same numbers, as a table</summary>
@@ -120,7 +136,58 @@ const delta = (now, then) => {
   return `<span class="d ${d > 0 ? "up" : "down"}">${d > 0 ? "▲ +" : "▼ "}${num(Math.abs(d) * (d > 0 ? 1 : 1))}</span>`;
 };
 
-export function render({ index, runs }) {
+/**
+ * The decay panel (EPIC-07 Phase 4a/4b). Replaces the reserved placeholder once
+ * a series exists; renders the placeholder until then.
+ *
+ * Two series, never merged: `pinned` is the pure disclosure signal (scanner
+ * versions frozen at the freeze), `current` is disclosure plus detection
+ * capability. Their divergence is how much of what we now know we could have
+ * known with better tools.
+ *
+ * GAPS ARE DRAWN AS GAPS. A month that did not run is a break in the line and a
+ * marker underneath, never an interpolated point. A gapless chart that is not
+ * gapless would be a lie of exactly the kind this project is about.
+ */
+function decayPanel(decay) {
+  if (!decay.length)
+    return gated("Decay curve", "EPIC-07",
+      "A frozen tree rescanned monthly, unchanged, charting how exposure grows through disclosure alone. The freeze exists (decay/v1.0.0, 826 packages, 635.5 MiB vaulted); no rescan has run yet.");
+
+  const findingsOf = (r) => (r.scanners ?? []).reduce((n, s) => n + (s.findings?.length ?? 0), 0);
+  const months = [...new Set(decay.map(({ record }) => (record.startedAt ?? "").slice(0, 7)))].sort();
+  const cell = (month, mode) => {
+    const hit = decay.find(({ record }) => (record.startedAt ?? "").slice(0, 7) === month && record.scannerMode === mode && record.status !== "gap");
+    if (hit) return { y: findingsOf(hit.record), gap: false };
+    const gap = decay.find(({ record }) => (record.startedAt ?? "").slice(0, 7) === month && record.status === "gap");
+    return { y: null, gap: true, reason: gap?.record?.reason ?? "no record for this month" };
+  };
+
+  const series = (mode) => ({
+    id: `decay-${mode}`, unit: "known findings",
+    points: months.map((m) => ({ label: m, ...cell(m, mode) })),
+  });
+  const pinned = series("pinned"), current = series("current");
+  const gaps = months.filter((m) => cell(m, "pinned").gap);
+  const tag = decay[0]?.tag ?? "v1.0.0";
+
+  return `
+<section class="panel">
+  <h2>Decay — known findings against an unchanged tree</h2>
+  <p><strong>The tree has not changed since the freeze.</strong> No packages updated,
+  no lines of code changed, no lockfile regenerated. Every finding below arrived
+  because the world learned something, not because Mist did anything.</p>
+  <p class="muted"><code>pinned</code> uses the scanner versions frozen at the freeze —
+  the pure disclosure signal. <code>current</code> uses the latest scanners, so it
+  carries disclosure <em>and</em> improved detection. The gap between them is how much
+  of what we now know we could have known with better tools.</p>
+  ${chart(`${tag} — pinned scanners (disclosure only)`, pinned)}
+  ${chart(`${tag} — current scanners (disclosure + detection)`, current)}
+  ${gaps.length ? `<p class="warn">${gaps.length} month(s) with no rescan: <code>${esc(gaps.join(", "))}</code>. Drawn as gaps, never interpolated.</p>` : ""}
+</section>`;
+}
+
+export function render({ index, runs, decay = [] }) {
   if (!runs.length) throw new Error("the record is empty");
   const digests = runs.map((r) => digest(r.envelope));
   const now = digests[digests.length - 1];
@@ -230,7 +297,7 @@ export function render({ index, runs }) {
   CI-* row would inflate a number.</p>
 </section>
 
-${gated("Decay curve", "EPIC-07", "A frozen tree rescanned over time, charting how exposure changes with no code change at all.")}
+${decayPanel(decay)}
 ${gated("Mist Index", "EPIC-06", "The composite score. It exists and currently reports NOT COMPUTABLE: two of five axes have no instrument.")}
 
 <footer>

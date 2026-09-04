@@ -1,0 +1,14 @@
+{
+  "$comment": "Scanner versions as of the freeze. The monthly rescan runs TWICE: once with these versions (scan_pinned -> pure disclosure signal) and once with latest (scan_current -> disclosure + detection). Without that split, a rising decay curve has two possible causes -- the world learned more, or the tools got better -- and the headline claim is unsupported. See docs/DECAY.md.",
+  "frozenAt": "2026-09-04",
+  "scanners": {
+    "npm-audit": { "pin": "npm@11.11.0", "how": "npm is pinned via the node version; node 24.14.1 ships npm 11.11.0" },
+    "osv-scanner": { "pin": "1.9.2", "how": "release binary, pinned in scan.yml OSV_SCANNER_VERSION" },
+    "semgrep": { "pin": "1.90.0", "how": "pip install semgrep==1.90.0" },
+    "gitleaks": { "pin": "8.21.2", "how": "release tarball, pinned in scan.yml GITLEAKS_VERSION" },
+    "sca-behavioral": { "pin": "sca-static@v1.0.0", "how": "first-party; the copy at the frozen tag" },
+    "sbom": { "pin": "@cyclonedx/cyclonedx-npm@latest-at-freeze", "how": "NOT PINNED at freeze time -- recorded as a known gap, see docs/DECAY.md" },
+    "licenses": { "pin": "license-inventory@v1.0.0", "how": "first-party; the copy at the frozen tag" }
+  },
+  "knownDegradation": "A pinned scanner will eventually stop running on a current CI image. When that happens it is recorded as a PER-SCANNER gap and the affected series is annotated on the chart -- never interpolated."
+}
