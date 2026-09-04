@@ -67,23 +67,83 @@ pasted the key where it worked, and moved on.
 
 ## Rotation record
 
-**Nothing has been provisioned.** There is no weather API account, no isolated
-cloud account (`deploy/isolation.md`), and no `package.json`. Steps 1–4 are owed
-by **EPIC-02 Phase 2** (weather provider integration).
+**K1 is provisioned, committed, and LIVE. It must be revoked.**
 
 | Step | Owner | State |
 |---|---|---|
-| 1. Provision K1 | EPIC-02 Phase 2 | **Owed** |
-| 2. Commit K1 plausibly | EPIC-02 Phase 2 | **Owed** |
-| 3. Ship the feature | EPIC-02 Phase 2 | **Owed** |
-| 4. Revoke K1 | EPIC-02 closing Work Item | **Owed** |
-| 5. Provision K2 (env var only) | EPIC-02 Phase 2 | **Owed** |
+| 1. Provision K1 | EPIC-02 Phase 2 | **Done** — 2026-09-03, OpenWeatherMap free tier |
+| 2. Commit K1 plausibly | EPIC-02 Phase 2 | **Done** — `apps/web/next.config.js`, `env` block |
+| 3. Ship the feature | EPIC-02 Phase 2 | **Done locally** — dashboard renders live weather; deploy still blocked |
+| 4. Revoke K1 | EPIC-02 closing Work Item | ⚠️ **OWED — this is the open one** |
+| 5. Provision K2 (env var only) | EPIC-02 Phase 2 | **Owed** — after step 4, and **step 5 is not currently safe**, see below |
 | 6. Never rewrite history | standing, forever | **In force** |
 
 | Key | Provisioned | Committed at | Revoked at | Revocation timestamp |
 |---|---|---|---|---|
-| K1 | *unset* | *unset* | *unset* | *unset* |
+| K1 | 2026-09-03 | `apps/web/next.config.js` env block | *not yet* | *unset* |
 | K2 | *unset* | never — env var only | — | — |
+
+### How K1 arrived, so the medianness claim can be checked
+
+Step 2 requires the commit to be ordinary rather than staged, and this one was
+caused by a real bug rather than arranged.
+
+The key was first put in the repository-root `.env`, which is gitignored. The
+dashboard still returned `401`, because **Next.js reads `.env` from its own
+project root (`apps/web`), not the workspace root**, so `process.env.WEATHER_API_KEY`
+was `undefined`. The documented Next.js answer to that is the `env` block in
+`next.config.js` — a committed file. The key went there, the feature started
+working, and the session moved on.
+
+That is exactly how keys reach public history: not by carelessness about
+secrets, but by carefulness about making the thing work. Nobody in that sequence
+was thinking about `gitleaks`.
+
+**Verified true positive.** Scanning the tracked tree with
+`schemas/secret-patterns.json` — the same ruleset `scripts/gen-gitleaks-config.mjs`
+compiles into the CI gitleaks config — the `openweather-style-key` rule matches
+`apps/web/next.config.js` twice. The scanner has something real to find.
+
+(Other matches in that scan are deliberate test data in
+`fixtures/synthetic-transcript.md` and `scripts/test-ledger.mjs`. They are
+fixtures for the redaction tests, not credentials.)
+
+### Step 5 is not safe as written, and this was found by a scanner
+
+An automated security review of the K1 commit raised a second point that this
+runbook did not anticipate, and it invalidates step 5 as currently worded.
+
+`apps/web/components/LocationSearch.tsx:27` calls the provider's geocoding
+endpoint **from the browser**, using `NEXT_PUBLIC_WEATHER_API_KEY`. In Next.js,
+a `NEXT_PUBLIC_*` value is **inlined into the client bundle at build time**. It
+is not read from the environment at runtime; it is compiled into JavaScript and
+served to every visitor.
+
+So step 5's protection — *"K2, supplied only via deployment environment
+variables"* — **does not exist for this application**. Supplying K2 as an
+environment variable and building the site publishes K2 to every browser that
+loads the page. It would be a live, unrevoked key handed out on request. That is
+strictly worse than K1's situation, because K1 is at least scheduled for
+revocation.
+
+**Step 5 therefore now requires one of:**
+
+1. K2 is server-side only, and the browser reaches the provider through an API
+   route on `apps/api` that holds the key; or
+2. K2 is a *separate, rate-limited, deliberately-public* key, provisioned in
+   full knowledge that it is public, and recorded here as such.
+
+Option 1 is the correct engineering answer. Option 2 may be the right answer for
+Mist, because option 1 is a **mitigation** — introducing a proxy is exactly the
+seam this application is specified not to have (`CI-6`), and adding it would be
+EPIC-09's work, not EPIC-02's. That tension is real and is left open here rather
+than resolved quietly. **Whoever provisions K2 must choose deliberately and
+record the choice in this table.**
+
+Note where this came from: nobody in the project noticed. An automated scanner
+looking at the K1 commit noticed, which is the whole thesis of
+`docs/mist-concept-evaluation.md:27` — observability the design did not provide
+has to be bought back afterwards, from a tool, one finding at a time.
 
 **The `key-rotation-recorded` test fails until the K1 revocation timestamp is
 filled in, and that failure is the reminder.** It is not a broken test. It is a
@@ -99,7 +159,10 @@ with K1 live.
 
 ## If K1 leaks before step 4
 
-It has not, because it does not exist yet. When it does: revoke immediately,
+**K1 exists and is live as of 2026-09-03.** It is committed at
+`apps/web/next.config.js` and has not been revoked. That is not a leak — it is
+step 2 working as designed — but it means the window this section describes is
+open right now. Revoke immediately,
 record the timestamp here, and **do not** rewrite history. Report per
 `SECURITY.md` — say *"a live credential is exposed at `<file>:<line>`"* and do
 not paste the value. The value being public is the expected end state; it being

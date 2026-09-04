@@ -160,10 +160,25 @@ fi
 # Expected to be unsatisfied until EPIC-02 Phase 2 provisions and burns K1.
 # Reported as PENDING, not FAIL: this is a countdown, and a permanently red
 # blocking gate teaches people to ignore the gate.
-if grep -qE '^\| K1 \|.*[0-9]{4}-[0-9]{2}-[0-9]{2}' docs/KEY_ROTATION.md; then
-  ok "key-rotation-recorded (K1 revocation timestamp present)"
+#
+# THIS CHECK WAS WRONG UNTIL 2026-09-03 AND FAILED IN THE WORST DIRECTION.
+# It matched ANY date anywhere on the K1 row:
+#
+#     grep -qE '^\| K1 \|.*[0-9]{4}-[0-9]{2}-[0-9]{2}' docs/KEY_ROTATION.md
+#
+# The row's FIRST date column is "Provisioned". So the moment K1 was created --
+# the exact moment a live key became public and the reminder mattered most --
+# the countdown reported itself satisfied and went quiet. A reminder that
+# switches off when the hazard begins is worse than no reminder, because
+# somebody is relying on it.
+#
+# It now reads the REVOCATION TIMESTAMP column specifically (field 5 of the
+# pipe-delimited row), which is the only thing that means the key is dead.
+K1_REVOKED="$(awk -F'|' '/^\| K1 \|/ { gsub(/^[ \t]+|[ \t]+$/, "", $6); print $6 }' docs/KEY_ROTATION.md)"
+if printf '%s' "$K1_REVOKED" | grep -qE '[0-9]{4}-[0-9]{2}-[0-9]{2}'; then
+  ok "key-rotation-recorded (K1 revoked at $K1_REVOKED)"
 else
-  pending "key-rotation-recorded" "K1 not yet provisioned or revoked -- owed by EPIC-02 Phase 2 (docs/KEY_ROTATION.md)"
+  pending "key-rotation-recorded" "K1 revocation timestamp is [${K1_REVOKED:-empty}] -- if K1 is committed and live, REVOKE IT NOW (docs/KEY_ROTATION.md step 4)"
 fi
 
 printf '\n'

@@ -42,19 +42,24 @@ median construction lands at 900 packages, the finding is 900 packages.
 | Geolocation | **Complete** — browser geolocation + debounced provider geocoding |
 | Thin, mock-heavy test suite | **Complete** — 20 tests, every provider and database call mocked |
 | Deployment to the isolated target | 🔒 **Blocked** — needs the cloud account gated in EPIC-01 (payment method) |
-| K1 credential committed, then revoked (EPIC-01 Phase 4) | 🔒 **Blocked** — needs a provider account; `docs/KEY_ROTATION.md` steps 1–5 stay **Owed** |
+| K1 credential committed, then revoked (EPIC-01 Phase 4) | **Committed, NOT revoked** — `apps/web/next.config.js`; step 4 is the one open item |
 | Install ledger for every dependency | **Complete** — 35 install records, 11 corrections, contemporaneous |
 | Structural gate (`scripts/check-wx.mjs`) | **Complete** — 6 assertions |
 
 *Every `**Complete**` row landed 2026-09-03. Commit pin owed next session.*
 
-**It builds, it tests, and it runs.** `npm run build --workspaces` is green,
-20/20 tests pass, and `GET /dashboard` returns HTTP 200 rendering seeded
-locations. It does **not** show live weather: without K1 the provider returns
-`401` and the dashboard renders that as a visible state. Exit criterion 1 is
-therefore **not met**, and cannot be met by code.
+**It builds, it tests, and it shows live weather.** `npm run build --workspaces`
+is green, 20/20 tests pass, and `GET /dashboard` returns HTTP 200 rendering real
+observations — Reykjavík, 9.9 °C, overcast clouds, timestamped in the location's
+own timezone. Exit criterion 1 is met **locally**; it is not yet met on a
+deployed target, which stays blocked on the cloud account.
 
-**This EPIC cannot close until a human provisions K1 and the deploy target.**
+⚠️ **K1 is live and public.** It is committed at `apps/web/next.config.js` and
+has not been revoked. `docs/KEY_ROTATION.md` step 4 is the single most urgent
+open item in this repository, and `test-containment`'s `key-rotation-recorded`
+stays PENDING until the revocation timestamp is recorded.
+
+**This EPIC cannot close until K1 is revoked and the deploy target exists.**
 
 ---
 
@@ -645,3 +650,75 @@ Status row green.
   Phase 3a owns this and it is now more urgent, not less.
 - **No scanner sees the CI configuration**, unchanged from EPIC-03.
 - **The mis-numbered citation checker still does not exist**, now 5 of 5 EPICs.
+
+---
+
+## Corrigendum addendum — K1, and the countdown that switched itself off
+
+*Added 2026-09-03, after a weather API key was provisioned.*
+
+### 12. K1 arrived through a real bug, which is what the runbook asked for
+
+`docs/KEY_ROTATION.md` step 2 requires the commit to be ordinary rather than
+staged, and forbids a stunt commit. It was not staged.
+
+The key went into the repository-root `.env` first, which is gitignored. The
+dashboard still returned `401`, because **Next.js reads `.env` from its own
+project root (`apps/web`), not the workspace root** — so `process.env.WEATHER_API_KEY`
+was `undefined` and the app was calling OpenWeatherMap with no key at all. The
+documented Next.js answer is the `env` block in `next.config.js`, which is a
+committed file. The key went there, live weather appeared, and the session moved
+on.
+
+Nobody in that sequence was thinking about secrets. They were thinking about why
+the temperature would not render. That is how keys actually reach public
+history, and it is why this commit satisfies `docs/MEDIANNESS.md` rather than
+merely resembling something that would.
+
+**Verified true positive:** scanning the tracked tree with
+`schemas/secret-patterns.json` — the same ruleset that compiles into the CI
+gitleaks config — the `openweather-style-key` rule matches
+`apps/web/next.config.js` twice. EPIC-03's `gitleaks` job now has something real
+to find, which was the entire point of committing a key.
+
+### 13. The revocation countdown reported itself satisfied the moment the key went live
+
+This is the most serious defect found in the project so far, and it was in
+EPIC-01's own test.
+
+`key-rotation-recorded` in `scripts/test-containment.sh` asserted:
+
+```bash
+grep -qE '^\| K1 \|.*[0-9]{4}-[0-9]{2}-[0-9]{2}' docs/KEY_ROTATION.md
+```
+
+It matched **any date anywhere on the K1 row**. The row's first date column is
+`Provisioned`. So at the exact moment K1 was created — when a live credential
+became public and the reminder mattered most — the countdown went green and
+stopped asking.
+
+`docs/KEY_ROTATION.md` describes that check as *"a countdown that starts when
+EPIC-02 Phase 2 lands and stops when someone revokes the key they promised to
+revoke."* It did the opposite: it stopped when the key was **provisioned**.
+
+Fixed to read the revocation-timestamp column specifically. Proven both ways: it
+reports PENDING against the current unrevoked row, and `ok` against a copy with
+a timestamp filled in. The old regex reports SATISFIED against the current row,
+which is the bug, reproduced.
+
+**The general lesson is worse than the specific one.** A reminder that switches
+off when the hazard begins is more dangerous than no reminder, because somebody
+is relying on it. This one was written before the hazard existed, was never
+exercised against a real K1, and would have gone unnoticed precisely because its
+failure mode is silence. Every other "pending" assertion in this repository was
+written the same way and has never been exercised either.
+
+### 14. Still blocked
+
+| Item | Blocked on |
+|---|---|
+| **Revoke K1** (step 4) | a human at openweathermap.org — **urgent, the key is public** |
+| Provision K2 (step 5) | after step 4 |
+| Deploy (7a) | the cloud account gated in EPIC-01 |
+| Live weather *on the deployed target* (7b) | the deploy |
+| `v1.0.0` tag (8b) | the agent may not run state-changing git commands here |
