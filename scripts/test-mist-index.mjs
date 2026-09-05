@@ -154,6 +154,51 @@ console.log("test-mist-index (EPIC-06 Test Plan)\n");
     r.composite.value === null, `composite came back ${r.composite.value}`);
 }
 
+// --- mi-a3-from-an-explicit-scan-run -----------------------------------------
+//
+// A3 is 25% of the weight and was the largest single reason the index reported
+// NOT COMPUTABLE. The measurement existed all along -- EPIC-03's behavioural SCA
+// reports packagesWithNetworkAtImport -- but importReach() only ever looked for
+// a scan-run.json sitting in the target root, and the battery emits it as a CI
+// artifact instead. The number was measured and then thrown away.
+//
+// EPIC-09 needs this: A3 must resolve on BOTH branches from the same battery
+// output, or the paired comparison has a hole where a quarter of the index is.
+
+{
+  const dir = tmp("mist-a3-");
+  const envelope = (status, n) => {
+    const f = join(dir, `${status}-${n}.json`);
+    writeFileSync(f, JSON.stringify({
+      schemaVersion: "1",
+      surface: { packagesWithNetworkAtImport: n },
+      scanners: [{ id: "sca-behavioral", status }],
+    }));
+    return f;
+  };
+
+  const r = run(ROOT, { scanRun: envelope("ran", 15) });
+  check("mi-a3-from-an-explicit-scan-run (measured from the battery output)",
+    r.axes.A3.state === "measured" && r.axes.A3.raw === 15,
+    `A3 came back ${JSON.stringify(r.axes.A3)} -- the battery measured 15 and the index could not see it`);
+
+  // The Gold Standard applied to this wiring: pointing the index at an envelope
+  // must not be enough on its own. A crashed instrument reports nothing, and a
+  // path that turned a crash into a measurement would be worse than no wiring.
+  const crashed = run(ROOT, { scanRun: envelope("crashed", 15) });
+  check("mi-a3-from-an-explicit-scan-run (a crashed SCA never becomes a measurement)",
+    crashed.axes.A3.state === "not-measured" && crashed.axes.A3.score === null
+      && /crashed/.test(crashed.axes.A3.detail ?? ""),
+    `A3 came back ${JSON.stringify(crashed.axes.A3)} -- it must refuse BECAUSE the scanner crashed, not because the envelope was never opened`);
+
+  // An envelope that does not exist must say so, not silently fall back to the
+  // root scan-run.json and report a number from a DIFFERENT tree.
+  const absent = run(ROOT, { scanRun: join(dir, "nope.json") });
+  check("mi-a3-from-an-explicit-scan-run (a named-but-missing envelope is an error, not a fallback)",
+    absent.axes.A3.state === "not-measured" && /nope\.json/.test(absent.axes.A3.detail ?? ""),
+    `A3 came back ${JSON.stringify(absent.axes.A3)} -- a missing envelope must name the path it was given`);
+}
+
 // --- mi-scores-external-repo -------------------------------------------------
 {
   const r = run(join(ROOT, "fixtures/repos/ordinary-app"));

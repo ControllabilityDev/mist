@@ -28,14 +28,16 @@ refactor lives on a long-lived `pure` branch and is never merged.
 
 | Component | Status |
 |---|---|
-| `pure` branch created from `v1.0.0` | 🔒 Gated |
-| `packages/kernel/` — pure, zero-dependency core | 🔒 Gated |
-| Shell adapters — I/O at the edges | 🔒 Gated |
-| Feature parity with `main` | 🔒 Gated |
-| Same scan battery, run on `pure` | 🔒 Gated |
-| Side-by-side comparison panel | 🔒 Gated |
-| `docs/PAIRED_REFACTOR.md` — the honest comparison | 🔒 Gated |
-| Violation elimination table (which `V-*` died) | 🔒 Gated |
+| `pure` branch created | ✅ from `main` tip `22057c0`, not the tag — see `docs/PAIRED_REFACTOR.md` |
+| "Before" column frozen before any `pure` code | ✅ `docs/paired/metrics-main.json` |
+| `packages/kernel/` — pure, zero-dependency core | ✅ 4 files, 30 tests, 0 deps, 0 dev deps |
+| Gold Standard: a rule change breaks `pure`, not `main` | ✅ `node scripts/mutation-exhibit.mjs` |
+| Shell adapters — I/O at the edges | 🔒 Phase 2 |
+| Feature parity with `main` | 🔒 Phase 3 — checklist frozen, P-01..P-18 |
+| Same scan battery, run on `pure` | 🔒 Phase 5 |
+| Side-by-side comparison panel | 🔒 Phase 5d |
+| `docs/PAIRED_REFACTOR.md` — the honest comparison | ◐ protocol, baseline and Phase 1 written; results pending |
+| Violation elimination table (which `V-*` died) | 🔒 Phase 5c |
 
 ---
 
@@ -190,27 +192,32 @@ contrived zero, because it is a target other teams could actually hit.
 
 ## Work Items
 
-### Phase 0 — Gate
+### Phase 0 — Gate ✅
 
-- [ ] **0a.** Confirm EPIC-02 shipped and `v1.0.0` is tagged and deployed.
-- [ ] **0b.** Confirm EPIC-03's battery, EPIC-05's inventory, and EPIC-06's index
-      all produce numbers for `main`. Record the "before" column **before**
-      writing any `pure` code, so it cannot drift.
-- [ ] **0c.** Create branch `pure` from `v1.0.0`. Record in
-      `docs/PAIRED_REFACTOR.md` that it is long-lived and never merged.
-- [ ] **0d.** Freeze the feature list from `main` as the parity checklist.
+- [x] **0a.** `v1.0.0` tagged at `389c63e`. The app is NOT deployed; only the
+      telemetry dashboard is. Recorded rather than waived.
+- [x] **0b.** Battery ✅, inventory ✅, index **partially**. A3 was wired here
+      (`--scan-run`) and rose from unmeasured to 76.7; A4 needs 90 days of
+      history against 13, and A5 reads a record shape EPIC-04 never wrote. The
+      index reports `NOT COMPUTABLE` with 80% of the weight measured — a result,
+      not a blank. The Δ row stays equally absent on both branches, which is the
+      only fair way to leave it.
+- [x] **0c.** Branch `pure` created from `main` tip, **not** `v1.0.0`; the tag
+      carries a defect that made the battery exit 1, and Phase 5 must run the
+      identical battery on both sides. Dependency trees are byte-identical.
+- [x] **0d.** Parity checklist frozen as P-01..P-18 in `docs/PAIRED_REFACTOR.md`.
 
-### Phase 1 — The kernel
+### Phase 1 — The kernel ✅
 
-- [ ] **1a.** `packages/kernel/src/types.ts` — the value types from the domain
+- [x] **1a.** `packages/kernel/src/types.ts` — the value types from the domain
       map. No wire shapes; `feelslike_c` does not appear here.
-- [ ] **1b.** `parse.ts` — provider wire JSON → `Observation | ParseError`,
+- [x] **1b.** `parse.ts` — provider wire JSON → `Observation | ParseError`,
       test-first, driven by real recorded provider payloads.
-- [ ] **1c.** `derive.ts` — `comfort()`, `bucketHourlyToDaily()`, `convert()`.
+- [x] **1c.** `derive.ts` — `comfort()`, `bucketHourlyToDaily()`, `convert()`.
       Each is the pure version of a rule that lives inside a component on `main`;
       cite the `main` `path:line` each one replaces.
-- [ ] **1d.** `ports.ts` — `ProviderPort`, `PreferenceStore`. Interfaces only.
-- [ ] **1e.** Assert zero runtime dependencies mechanically, as in EPIC-04/06.
+- [x] **1d.** `ports.ts` — `ProviderPort`, `PreferenceStore`. Interfaces only.
+- [x] **1e.** Assert zero runtime dependencies mechanically, as in EPIC-04/06.
 
 ### Phase 2 — The shell
 

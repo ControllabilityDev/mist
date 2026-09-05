@@ -1,0 +1,55 @@
+{
+  "schemaVersion": "1",
+  "measuredAt": "2026-09-04T23:52:47Z",
+  "target": "/Users/christoph/src/github.com/ControllabilityDev/mist",
+  "branch": "pure",
+  "commit": "22057c0c06e775c3d1ce83fcf0b01a82cfc0738f",
+  "scanRun": "/Users/christoph/src/github.com/ControllabilityDev/mist/docs/paired/scan-run-main.json",
+  "lockfilePackages": 828,
+  "packagesWithInstallScripts": 6,
+  "packagesWithNetworkAtInstall": 2,
+  "packagesWithNetworkAtImport": 15,
+  "distinctMaintainers": null,
+  "firstPartyFindings": 15,
+  "secondPartyFindings": 48,
+  "firstPartyLines": 504,
+  "mistIndex": {
+    "value": null,
+    "missing": [
+      "A4",
+      "A5"
+    ],
+    "measuredWeight": 0.8,
+    "axes": {
+      "A1": {
+        "state": "measured",
+        "raw": 794,
+        "score": 70.9
+      },
+      "A2": {
+        "state": "measured",
+        "raw": 6,
+        "score": 36.7
+      },
+      "A3": {
+        "state": "measured",
+        "raw": 15,
+        "score": 76.7
+      },
+      "A4": {
+        "state": "insufficient-history",
+        "raw": null,
+        "score": null
+      },
+      "A5": {
+        "state": "unavailable",
+        "raw": null,
+        "score": null
+      }
+    }
+  },
+  "notMeasuredHere": [
+    "tests that can fail on a real behavior change (EPIC-09 Phase 4d, mutation run)",
+    "build time (measured at comparison time, same machine, same day)"
+  ]
+}

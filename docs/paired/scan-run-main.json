@@ -1,0 +1,598 @@
+{
+  "schemaVersion": "1",
+  "commit": "389c63ea3a39e8b8e65ad212f791b54b0d1294a3",
+  "ref": "main",
+  "startedAt": "2026-09-04T23:19:25Z",
+  "surface": {
+    "directDependencies": 35,
+    "transitivePackages": null,
+    "packagesWithInstallScripts": 6,
+    "packagesWithNetworkAtInstall": 2,
+    "packagesWithNetworkAtImport": 15,
+    "distinctMaintainers": null
+  },
+  "scanners": [
+    {
+      "id": "npm-audit",
+      "status": "ran",
+      "skipReason": null,
+      "version": "11.19.0",
+      "exitCode": 0,
+      "durationMs": 5203,
+      "findings": [
+        {
+          "id": "npm-audit:1145093",
+          "severity": "high",
+          "party": "second",
+          "subject": "deepmerge-ts@<8.0.0",
+          "counterInvariant": "CI-3",
+          "title": "DeepmergeTS has stack exhaustion when merging recursive object graphs"
+        },
+        {
+          "id": "npm-audit:1153173",
+          "severity": "high",
+          "party": "second",
+          "subject": "mysql2@<=3.23.0",
+          "counterInvariant": "CI-3",
+          "title": "MySQL2: Auth Plugin Downgrade to mysql_clear_password Leaks Plaintext Credentials"
+        },
+        {
+          "id": "npm-audit:1158532",
+          "severity": "medium",
+          "party": "second",
+          "subject": "mysql2@<=3.23.0",
+          "counterInvariant": "CI-3",
+          "title": "MySQL2: Unbounded zlib inflate in compressed MySQL protocol handler allows decompression-bomb DoS"
+        }
+      ],
+      "unmapped": []
+    },
+    {
+      "id": "osv-scanner",
+      "status": "ran",
+      "skipReason": null,
+      "version": "osv-scanner version: 1.9.2",
+      "exitCode": 1,
+      "durationMs": 1415,
+      "findings": [
+        {
+          "id": "osv:GHSA-ggr8-5vv4-36mx",
+          "severity": "high",
+          "party": "second",
+          "subject": "deepmerge-ts@7.1.5",
+          "counterInvariant": "CI-3",
+          "title": "DeepmergeTS has stack exhaustion when merging recursive object graphs"
+        },
+        {
+          "id": "osv:GHSA-3f6p-5ww8-9rcr",
+          "severity": "high",
+          "party": "second",
+          "subject": "mysql2@3.15.3",
+          "counterInvariant": "CI-3",
+          "title": "MySQL2: Auth Plugin Downgrade to mysql_clear_password Leaks Plaintext Credentials"
+        },
+        {
+          "id": "osv:GHSA-rgwj-5xj2-c3m3",
+          "severity": "medium",
+          "party": "second",
+          "subject": "mysql2@3.15.3",
+          "counterInvariant": "CI-3",
+          "title": "MySQL2: Unbounded zlib inflate in compressed MySQL protocol handler allows decompression-bomb DoS"
+        }
+      ],
+      "unmapped": []
+    },
+    {
+      "id": "sca-behavioral",
+      "status": "ran",
+      "skipReason": null,
+      "version": "sca-static (static approximation; Socket still owed)",
+      "exitCode": 0,
+      "durationMs": 1003,
+      "findings": [
+        {
+          "id": "sca:obfuscated-code:@adobe/css-tools",
+          "severity": "medium",
+          "party": "second",
+          "subject": "@adobe/css-tools@4.5.0",
+          "counterInvariant": null,
+          "title": "Entry point looks minified or obfuscated"
+        },
+        {
+          "id": "sca:obfuscated-code:@csstools/css-calc",
+          "severity": "medium",
+          "party": "second",
+          "subject": "@csstools/css-calc@2.1.4",
+          "counterInvariant": null,
+          "title": "Entry point looks minified or obfuscated"
+        },
+        {
+          "id": "sca:obfuscated-code:@csstools/css-color-parser",
+          "severity": "medium",
+          "party": "second",
+          "subject": "@csstools/css-color-parser@3.1.0",
+          "counterInvariant": null,
+          "title": "Entry point looks minified or obfuscated"
+        },
+        {
+          "id": "sca:obfuscated-code:@csstools/css-parser-algorithms",
+          "severity": "medium",
+          "party": "second",
+          "subject": "@csstools/css-parser-algorithms@3.0.5",
+          "counterInvariant": null,
+          "title": "Entry point looks minified or obfuscated"
+        },
+        {
+          "id": "sca:obfuscated-code:@csstools/css-tokenizer",
+          "severity": "medium",
+          "party": "second",
+          "subject": "@csstools/css-tokenizer@3.0.4",
+          "counterInvariant": null,
+          "title": "Entry point looks minified or obfuscated"
+        },
+        {
+          "id": "sca:obfuscated-code:@electric-sql/pglite",
+          "severity": "medium",
+          "party": "second",
+          "subject": "@electric-sql/pglite@0.4.3",
+          "counterInvariant": null,
+          "title": "Entry point looks minified or obfuscated"
+        },
+        {
+          "id": "sca:network-at-import:@electric-sql/pglite-socket",
+          "severity": "high",
+          "party": "second",
+          "subject": "@electric-sql/pglite-socket@0.1.3",
+          "counterInvariant": "CI-1",
+          "title": "Entry point references a network module at module scope (UPPER BOUND: requiring is not calling)"
+        },
+        {
+          "id": "sca:obfuscated-code:@electric-sql/pglite-socket",
+          "severity": "medium",
+          "party": "second",
+          "subject": "@electric-sql/pglite-socket@0.1.3",
+          "counterInvariant": null,
+          "title": "Entry point looks minified or obfuscated"
+        },
+        {
+          "id": "sca:obfuscated-code:@electric-sql/pglite-tools",
+          "severity": "medium",
+          "party": "second",
+          "subject": "@electric-sql/pglite-tools@0.3.3",
+          "counterInvariant": null,
+          "title": "Entry point looks minified or obfuscated"
+        },
+        {
+          "id": "sca:obfuscated-code:emoji-regex",
+          "severity": "medium",
+          "party": "second",
+          "subject": "emoji-regex@9.2.2",
+          "counterInvariant": null,
+          "title": "Entry point looks minified or obfuscated"
+        },
+        {
+          "id": "sca:obfuscated-code:@next/env",
+          "severity": "medium",
+          "party": "second",
+          "subject": "@next/env@16.3.4",
+          "counterInvariant": null,
+          "title": "Entry point looks minified or obfuscated"
+        },
+        {
+          "id": "sca:obfuscated-code:@next/swc-linux-x64-gnu",
+          "severity": "medium",
+          "party": "second",
+          "subject": "@next/swc-linux-x64-gnu@16.3.4",
+          "counterInvariant": null,
+          "title": "Entry point looks minified or obfuscated"
+        },
+        {
+          "id": "sca:install-script:@parcel/watcher",
+          "severity": "high",
+          "party": "second",
+          "subject": "@parcel/watcher@2.6.0",
+          "counterInvariant": "CI-1",
+          "title": "Runs install"
+        },
+        {
+          "id": "sca:install-script:@prisma/engines",
+          "severity": "high",
+          "party": "second",
+          "subject": "@prisma/engines@7.10.0",
+          "counterInvariant": "CI-1",
+          "title": "Runs postinstall"
+        },
+        {
+          "id": "sca:network-at-import:agent-base",
+          "severity": "high",
+          "party": "second",
+          "subject": "agent-base@7.1.4",
+          "counterInvariant": "CI-1",
+          "title": "Entry point references a network module at module scope (UPPER BOUND: requiring is not calling)"
+        },
+        {
+          "id": "sca:network-at-import:axios",
+          "severity": "high",
+          "party": "second",
+          "subject": "axios@1.20.0",
+          "counterInvariant": "CI-1",
+          "title": "Entry point references a network module at module scope (UPPER BOUND: requiring is not calling)"
+        },
+        {
+          "id": "sca:obfuscated-code:baseline-browser-mapping",
+          "severity": "medium",
+          "party": "second",
+          "subject": "baseline-browser-mapping@2.11.21",
+          "counterInvariant": null,
+          "title": "Entry point looks minified or obfuscated"
+        },
+        {
+          "id": "sca:install-script:better-sqlite3",
+          "severity": "high",
+          "party": "second",
+          "subject": "better-sqlite3@12.11.1",
+          "counterInvariant": "CI-1",
+          "title": "Runs install"
+        },
+        {
+          "id": "sca:network-at-install:better-sqlite3",
+          "severity": "critical",
+          "party": "second",
+          "subject": "better-sqlite3@12.11.1",
+          "counterInvariant": "CI-1",
+          "title": "Install script appears to reach the network"
+        },
+        {
+          "id": "sca:obfuscated-code:es-module-lexer",
+          "severity": "medium",
+          "party": "second",
+          "subject": "es-module-lexer@2.3.2",
+          "counterInvariant": null,
+          "title": "Entry point looks minified or obfuscated"
+        },
+        {
+          "id": "sca:install-script:esbuild",
+          "severity": "high",
+          "party": "second",
+          "subject": "esbuild@0.28.2",
+          "counterInvariant": "CI-1",
+          "title": "Runs postinstall"
+        },
+        {
+          "id": "sca:network-at-install:esbuild",
+          "severity": "critical",
+          "party": "second",
+          "subject": "esbuild@0.28.2",
+          "counterInvariant": "CI-1",
+          "title": "Install script appears to reach the network"
+        },
+        {
+          "id": "sca:network-at-import:fb-watchman",
+          "severity": "high",
+          "party": "second",
+          "subject": "fb-watchman@2.0.2",
+          "counterInvariant": "CI-1",
+          "title": "Entry point references a network module at module scope (UPPER BOUND: requiring is not calling)"
+        },
+        {
+          "id": "sca:network-at-import:follow-redirects",
+          "severity": "high",
+          "party": "second",
+          "subject": "follow-redirects@1.16.0",
+          "counterInvariant": "CI-1",
+          "title": "Entry point references a network module at module scope (UPPER BOUND: requiring is not calling)"
+        },
+        {
+          "id": "sca:network-at-import:form-data",
+          "severity": "high",
+          "party": "second",
+          "subject": "form-data@4.0.6",
+          "counterInvariant": "CI-1",
+          "title": "Entry point references a network module at module scope (UPPER BOUND: requiring is not calling)"
+        },
+        {
+          "id": "sca:network-at-import:get-port-please",
+          "severity": "high",
+          "party": "second",
+          "subject": "get-port-please@3.2.0",
+          "counterInvariant": "CI-1",
+          "title": "Entry point references a network module at module scope (UPPER BOUND: requiring is not calling)"
+        },
+        {
+          "id": "sca:obfuscated-code:glob",
+          "severity": "medium",
+          "party": "second",
+          "subject": "glob@13.0.6",
+          "counterInvariant": null,
+          "title": "Entry point looks minified or obfuscated"
+        },
+        {
+          "id": "sca:network-at-import:http-proxy-agent",
+          "severity": "high",
+          "party": "second",
+          "subject": "http-proxy-agent@7.0.2",
+          "counterInvariant": "CI-1",
+          "title": "Entry point references a network module at module scope (UPPER BOUND: requiring is not calling)"
+        },
+        {
+          "id": "sca:network-at-import:https-proxy-agent",
+          "severity": "high",
+          "party": "second",
+          "subject": "https-proxy-agent@7.0.6",
+          "counterInvariant": "CI-1",
+          "title": "Entry point references a network module at module scope (UPPER BOUND: requiring is not calling)"
+        },
+        {
+          "id": "sca:obfuscated-code:is-property",
+          "severity": "medium",
+          "party": "second",
+          "subject": "is-property@1.0.2",
+          "counterInvariant": null,
+          "title": "Entry point looks minified or obfuscated"
+        },
+        {
+          "id": "sca:network-at-import:methods",
+          "severity": "high",
+          "party": "second",
+          "subject": "methods@1.1.2",
+          "counterInvariant": "CI-1",
+          "title": "Entry point references a network module at module scope (UPPER BOUND: requiring is not calling)"
+        },
+        {
+          "id": "sca:network-at-import:napi-postinstall",
+          "severity": "high",
+          "party": "second",
+          "subject": "napi-postinstall@0.3.4",
+          "counterInvariant": "CI-1",
+          "title": "Entry point references a network module at module scope (UPPER BOUND: requiring is not calling)"
+        },
+        {
+          "id": "sca:obfuscated-code:lru-cache",
+          "severity": "medium",
+          "party": "second",
+          "subject": "lru-cache@11.5.2",
+          "counterInvariant": null,
+          "title": "Entry point looks minified or obfuscated"
+        },
+        {
+          "id": "sca:install-script:prisma",
+          "severity": "high",
+          "party": "second",
+          "subject": "prisma@7.10.0",
+          "counterInvariant": "CI-1",
+          "title": "Runs preinstall"
+        },
+        {
+          "id": "sca:obfuscated-code:remeda",
+          "severity": "medium",
+          "party": "second",
+          "subject": "remeda@2.33.4",
+          "counterInvariant": null,
+          "title": "Entry point looks minified or obfuscated"
+        },
+        {
+          "id": "sca:network-at-import:router",
+          "severity": "high",
+          "party": "second",
+          "subject": "router@2.2.0",
+          "counterInvariant": "CI-1",
+          "title": "Entry point references a network module at module scope (UPPER BOUND: requiring is not calling)"
+        },
+        {
+          "id": "sca:network-at-import:simple-get",
+          "severity": "high",
+          "party": "second",
+          "subject": "simple-get@4.0.1",
+          "counterInvariant": "CI-1",
+          "title": "Entry point references a network module at module scope (UPPER BOUND: requiring is not calling)"
+        },
+        {
+          "id": "sca:obfuscated-code:std-env",
+          "severity": "medium",
+          "party": "second",
+          "subject": "std-env@3.10.0",
+          "counterInvariant": null,
+          "title": "Entry point looks minified or obfuscated"
+        },
+        {
+          "id": "sca:obfuscated-code:stylis",
+          "severity": "medium",
+          "party": "second",
+          "subject": "stylis@4.2.0",
+          "counterInvariant": null,
+          "title": "Entry point looks minified or obfuscated"
+        },
+        {
+          "id": "sca:network-at-import:superagent",
+          "severity": "high",
+          "party": "second",
+          "subject": "superagent@10.3.0",
+          "counterInvariant": "CI-1",
+          "title": "Entry point references a network module at module scope (UPPER BOUND: requiring is not calling)"
+        },
+        {
+          "id": "sca:network-at-import:tunnel-agent",
+          "severity": "high",
+          "party": "second",
+          "subject": "tunnel-agent@0.6.0",
+          "counterInvariant": "CI-1",
+          "title": "Entry point references a network module at module scope (UPPER BOUND: requiring is not calling)"
+        },
+        {
+          "id": "sca:install-script:unrs-resolver",
+          "severity": "high",
+          "party": "second",
+          "subject": "unrs-resolver@1.12.2",
+          "counterInvariant": "CI-1",
+          "title": "Runs postinstall"
+        }
+      ],
+      "unmapped": [
+        "obfuscated-code"
+      ]
+    },
+    {
+      "id": "semgrep",
+      "status": "crashed",
+      "skipReason": null,
+      "version": null,
+      "exitCode": 1,
+      "durationMs": 557,
+      "findings": [],
+      "unmapped": []
+    },
+    {
+      "id": "gitleaks",
+      "status": "ran",
+      "skipReason": null,
+      "version": "8.21.2",
+      "exitCode": 1,
+      "durationMs": 1725,
+      "findings": [
+        {
+          "id": "gitleaks:mist-openweather-style-key:3892074421b06dc29459e1e0ab567fff4387add1:10",
+          "severity": "high",
+          "party": "first",
+          "subject": "apps/web/next.config.js:10",
+          "counterInvariant": null,
+          "title": "32 hex characters standing alone -- the shape of the weather API keys Mist uses (K1/K2, docs/KEY_ROTATION.md)"
+        },
+        {
+          "id": "gitleaks:mist-openweather-style-key:3892074421b06dc29459e1e0ab567fff4387add1:11",
+          "severity": "high",
+          "party": "first",
+          "subject": "apps/web/next.config.js:11",
+          "counterInvariant": null,
+          "title": "32 hex characters standing alone -- the shape of the weather API keys Mist uses (K1/K2, docs/KEY_ROTATION.md)"
+        },
+        {
+          "id": "gitleaks:curl-auth-header:f7d9aed9540bdfd5d798e9fea7938387fe883272:19",
+          "severity": "high",
+          "party": "first",
+          "subject": "fixtures/synthetic-transcript.md:19",
+          "counterInvariant": null,
+          "title": "curl-auth-header"
+        },
+        {
+          "id": "gitleaks:mist-private-key-block:f7d9aed9540bdfd5d798e9fea7938387fe883272:26",
+          "severity": "high",
+          "party": "first",
+          "subject": "fixtures/synthetic-transcript.md:26",
+          "counterInvariant": null,
+          "title": "a PEM private key, header through footer -- redacting only the header would leave the key body in the transcript"
+        },
+        {
+          "id": "gitleaks:mist-bearer-token:f7d9aed9540bdfd5d798e9fea7938387fe883272:19",
+          "severity": "high",
+          "party": "first",
+          "subject": "fixtures/synthetic-transcript.md:19",
+          "counterInvariant": null,
+          "title": "Authorization: Bearer <token>"
+        },
+        {
+          "id": "gitleaks:jwt:f7d9aed9540bdfd5d798e9fea7938387fe883272:19",
+          "severity": "high",
+          "party": "first",
+          "subject": "fixtures/synthetic-transcript.md:19",
+          "counterInvariant": null,
+          "title": "Uncovered a JSON Web Token, which may lead to unauthorized access to web applications and sensitive user data."
+        },
+        {
+          "id": "gitleaks:mist-aws-access-key-id:f7d9aed9540bdfd5d798e9fea7938387fe883272:22",
+          "severity": "high",
+          "party": "first",
+          "subject": "fixtures/synthetic-transcript.md:22",
+          "counterInvariant": null,
+          "title": "AKIA/ASIA-prefixed access key id"
+        },
+        {
+          "id": "gitleaks:private-key:f7d9aed9540bdfd5d798e9fea7938387fe883272:26",
+          "severity": "high",
+          "party": "first",
+          "subject": "fixtures/synthetic-transcript.md:26",
+          "counterInvariant": null,
+          "title": "Identified a Private Key, which may compromise cryptographic security and sensitive data encryption."
+        },
+        {
+          "id": "gitleaks:mist-openweather-style-key:f7d9aed9540bdfd5d798e9fea7938387fe883272:12",
+          "severity": "high",
+          "party": "first",
+          "subject": "fixtures/synthetic-transcript.md:12",
+          "counterInvariant": null,
+          "title": "32 hex characters standing alone -- the shape of the weather API keys Mist uses (K1/K2, docs/KEY_ROTATION.md)"
+        },
+        {
+          "id": "gitleaks:mist-openweather-style-key:f7d9aed9540bdfd5d798e9fea7938387fe883272:14",
+          "severity": "high",
+          "party": "first",
+          "subject": "fixtures/synthetic-transcript.md:14",
+          "counterInvariant": null,
+          "title": "32 hex characters standing alone -- the shape of the weather API keys Mist uses (K1/K2, docs/KEY_ROTATION.md)"
+        },
+        {
+          "id": "gitleaks:mist-generic-api-key-assignment:f7d9aed9540bdfd5d798e9fea7938387fe883272:12",
+          "severity": "high",
+          "party": "first",
+          "subject": "fixtures/synthetic-transcript.md:12",
+          "counterInvariant": null,
+          "title": "key/token/secret assigned a long opaque value"
+        },
+        {
+          "id": "gitleaks:mist-jwt:f7d9aed9540bdfd5d798e9fea7938387fe883272:19",
+          "severity": "high",
+          "party": "first",
+          "subject": "fixtures/synthetic-transcript.md:19",
+          "counterInvariant": null,
+          "title": "three base64url segments separated by dots"
+        },
+        {
+          "id": "gitleaks:mist-aws-access-key-id:f7d9aed9540bdfd5d798e9fea7938387fe883272:159",
+          "severity": "high",
+          "party": "first",
+          "subject": "scripts/test-ledger.mjs:159",
+          "counterInvariant": null,
+          "title": "AKIA/ASIA-prefixed access key id"
+        },
+        {
+          "id": "gitleaks:mist-openweather-style-key:f7d9aed9540bdfd5d798e9fea7938387fe883272:120",
+          "severity": "high",
+          "party": "first",
+          "subject": "scripts/test-ledger.mjs:120",
+          "counterInvariant": null,
+          "title": "32 hex characters standing alone -- the shape of the weather API keys Mist uses (K1/K2, docs/KEY_ROTATION.md)"
+        },
+        {
+          "id": "gitleaks:mist-openweather-style-key:f7d9aed9540bdfd5d798e9fea7938387fe883272:156",
+          "severity": "high",
+          "party": "first",
+          "subject": "scripts/test-ledger.mjs:156",
+          "counterInvariant": null,
+          "title": "32 hex characters standing alone -- the shape of the weather API keys Mist uses (K1/K2, docs/KEY_ROTATION.md)"
+        }
+      ],
+      "unmapped": [
+        "secret-in-history"
+      ]
+    },
+    {
+      "id": "sbom",
+      "status": "crashed",
+      "skipReason": null,
+      "version": "6.0.1",
+      "exitCode": 254,
+      "durationMs": 1162,
+      "findings": [],
+      "unmapped": []
+    },
+    {
+      "id": "licenses",
+      "status": "crashed",
+      "skipReason": null,
+      "version": "v24.20.0",
+      "exitCode": 1,
+      "durationMs": 51,
+      "findings": [],
+      "unmapped": []
+    }
+  ]
+}

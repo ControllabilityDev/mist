@@ -83,14 +83,28 @@ export function installExecution(root) {
  * access", which nobody has checked and which is probably false.
  *
  * If a scan-run.json with a behavioural scanner appears, this reads it.
+ *
+ * `scanRun` names an envelope explicitly. EPIC-03's battery emits scan-run.json
+ * as a CI ARTIFACT, not as a file in the tree, so the number this axis needs was
+ * being measured on every run and then discarded -- A3 is 25% of the weight and
+ * was the largest single reason the index read NOT COMPUTABLE. EPIC-09 needs the
+ * axis to resolve on two branches from one battery, which a root-relative lookup
+ * cannot do.
+ *
+ * A named-but-missing envelope is an ERROR, never a fallback to the root file.
+ * Silently scoring a different tree than the caller asked for is how a paired
+ * comparison reports a Δ between a branch and itself.
  */
-export function importReach(root) {
-  const file = join(root, "scan-run.json");
-  if (!existsSync(file)) return { ok: false, why: "no scan-run.json; and no behavioural SCA is wired (EPIC-03 Phase 2a)" };
+export function importReach(root, scanRun = null) {
+  const file = scanRun ?? join(root, "scan-run.json");
+  if (!existsSync(file))
+    return { ok: false, why: scanRun
+      ? `no envelope at ${scanRun}`
+      : "no scan-run.json; and no behavioural SCA is wired (EPIC-03 Phase 2a)" };
   const env = JSON.parse(readFileSync(file, "utf8"));
   const sca = env.scanners?.find((s) => s.id === "sca-behavioral");
   if (!sca || sca.status !== "ran")
-    return { ok: false, why: `scan-run.json exists but sca-behavioral is "${sca?.status ?? "absent"}"` };
+    return { ok: false, why: `the envelope was read but sca-behavioral is "${sca?.status ?? "absent"}"` };
   const n = env.surface?.packagesWithNetworkAtImport;
   if (!Number.isInteger(n)) return { ok: false, why: "sca-behavioral ran but reported no packagesWithNetworkAtImport" };
   return { ok: true, value: n, detail: "from scan-run.json surface.packagesWithNetworkAtImport" };

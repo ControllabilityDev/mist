@@ -159,3 +159,20 @@ prisma/dev.db
 # quota on day one and be re-fetched by every clone. Rebuild it with
 # `node scripts/vault.mjs build decay/v1.0.0`; verify with `check`.
 decay/*/vault/
+
+# A GLOBAL ignore pattern hid this repository's only CLI entry point.
+#
+# ~/.gitignore_global carries a bare `bin`, which matches a directory named
+# `bin` at ANY depth in EVERY repository. tools/mist-index/bin/mist-index.mjs
+# was therefore never committed: EPIC-06's tool worked on one laptop and
+# nowhere else, and CI ran `node tools/mist-index/bin/mist-index.mjs` on every
+# push and swallowed "Cannot find module" because the step ends in `|| true`.
+#
+# The negation must name the DIRECTORY. Git cannot re-include a file whose
+# parent directory is excluded, so `!.../bin/mist-index.mjs` alone would not
+# work -- the directory has to be un-ignored first.
+#
+# Repository .gitignore beats core.excludesFile, so this fixes the repo for
+# everyone without depending on any one contributor's personal configuration.
+!tools/mist-index/bin/
+!tools/mist-index/bin/**

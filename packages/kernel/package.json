@@ -1,0 +1,11 @@
+{
+  "name": "@mist/kernel",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "The pure core: values in, values out. No I/O, no clock, no environment.",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": { "test": "node --test 'test/*.test.ts'" },
+  "dependencies": {},
+  "devDependencies": {}
+}
